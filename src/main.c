@@ -7,8 +7,11 @@
 #include "defines.h"
 #include "pngmap.h"
 
+#ifndef __CYGWIN__
+// fixing a cygwin error
 extern char *optarg;
 extern int optind, opterr, optopt;
+#endif
 
 enum prgmode {
 	MODE_NONE,
@@ -543,6 +546,9 @@ int main (int argc, char** argv) {
 	const char* mfname = argv[optind+1];
 
 	switch(mode) {
+		case MODE_CREATE:
+			fprintf(stderr,"Create mode not implemented yet.\n");
+			break;
 		case MODE_EXPORT:
 			if ((!sfname) || (!mfname)) exit_usage_error(argv);
 			city2png(sfname,mfname,citynum);
