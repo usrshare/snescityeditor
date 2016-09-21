@@ -1,4 +1,5 @@
 obj/
+debug.bin
 snescityeditor
 snescityeditor.exe
 *.png

@@ -6,7 +6,7 @@ LD=ld
 CFLAGS=-std=c11 -D_POSIX_C_SOURCE=2
 LDSTATIC = $(shell libpng-config --ldflags )
 
-_OBJS = main.o
+_OBJS = pngmap.o main.o
 
 ifdef RELEASE
 DEFS += -xSSE3 -O3 -DNDEBUG
