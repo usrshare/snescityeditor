@@ -25,6 +25,10 @@ char* namechars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ,.-";
 const size_t cityheader[2] = {0, 0x7FF0};
 const size_t cityoffset[2] = {0x10, 0x4000};
 
+#define CITYSIZE 0x3FE0 //the size of city data
+#define CITYMAPSTART 0xBF0 //offset for the city map
+#define CITYMAPLEN 0x3400 //size of the city map
+
 int city_decompress (const uint16_t* in, uint16_t* out, size_t* outsz) { 
 	//reimplementation of a procedure located at 03D15F in the American ROM.
 
@@ -242,12 +246,12 @@ int city2png (const char* sfname, const char* mfname, int citynum) {
 	cityname[namelen] = 0;
 	printf("City name: %s\n",cityname);
 
-	uint8_t sramfile[0x3400];
-	memset(sramfile,0xFF,0x3400);	
+	uint8_t sramfile[CITYMAPLEN];
+	memset(sramfile,0xFF,CITYMAPLEN);	
 
-	fseek(cityfile,cityoffset[citynum] + 0xBF0,SEEK_SET);
+	fseek(cityfile,cityoffset[citynum] + CITYMAPSTART,SEEK_SET);
 
-	fread(sramfile,0x3400,1,cityfile);
+	fread(sramfile,CITYMAPLEN,1,cityfile);
 
 	uint16_t citytemp[CITYWIDTH * CITYHEIGHT];
 	uint16_t citytemp2[CITYWIDTH * CITYHEIGHT];
@@ -394,12 +398,13 @@ int city_improve (uint16_t* city) {
 	}	
 }
 
+
 int fixcksum (uint8_t* citysram) {
 	
 	uint16_t cksum1 = 0;
 	uint16_t cksum2 = 0;
 
-	for (int i=0; i <0x3FE0; i++) { //everything BUT the headers at the start and end.
+	for (int i=0; i < CITYSIZE; i++) { //everything BUT the headers at the start and end.
 
 		cksum1 += citysram[i + 0x10]; //cityoffset(0)  / 2
 		cksum2 += citysram[i + 0x4000]; //cityoffset(1) / 2
@@ -484,7 +489,7 @@ int png2city (const char* sfname, const char* mfname, int citynum, int improve) 
 	cityfile = fopen(sfname,"wb");
 	if (!cityfile) { perror("Unable to open city file"); return 1; }
 
-	memcpy(citysram + cityoffset[citynum] + 0xBF0, citycomp, citysize + 2);
+	memcpy(citysram + cityoffset[citynum] + CITYMAPSTART, citycomp, citysize + 2);
 
 	for (int i=0; i < 2; i++)
 		citysram[cityheader[i] + 5 + citynum] = 1; //1 means city exists
