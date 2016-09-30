@@ -46,6 +46,8 @@ uint32_t pngcolors[] = {
 	0x018001, //23 forest alt SW
 	0x017E01, //24 forest alt S
 	0x017C01, //25 forest alt SE
+	0x20C020, //26 park
+	0x20A020, //27 park with tree?
 	
 };
 

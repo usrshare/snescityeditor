@@ -31,6 +31,7 @@ const size_t cityoffset[2] = {0x10, 0x4000};
 
 int city_decompress (const uint16_t* in, uint16_t* out, size_t* outsz) { 
 	//reimplementation of a procedure located at 03D15F in the American ROM.
+	//this one handles 0x4000 ~ 0x7FFF and 0xC000 ~ 0xFFFE?
 
 	size_t inpos = 0;
 	size_t outpos = 0;
@@ -64,6 +65,7 @@ int city_decompress (const uint16_t* in, uint16_t* out, size_t* outsz) {
 }
 
 int city_decompress2 (const uint16_t* in, uint16_t* out, size_t* outsz) {
+	//this function handles 0x0400 ~ 0x3FFF and such.
 
 	size_t inpos = 0;
 	size_t outpos = 0;
@@ -71,6 +73,7 @@ int city_decompress2 (const uint16_t* in, uint16_t* out, size_t* outsz) {
 	uint16_t v = 0;
 
 	while ((v = in[inpos]) != 0xFFFF) {
+
 
 		if (v & 0x3C00) {
 
@@ -94,6 +97,10 @@ int city_decompress2 (const uint16_t* in, uint16_t* out, size_t* outsz) {
 }
 
 int city_decompress3 (const uint16_t* in, uint16_t* out, size_t* outsz) {
+	//this function handles the 0x8000 ~ 0xFFFE bytes,
+	//which are used for placing 3x3 buildings.
+
+	//WARNING: this function assumes that the "out" array is zeroed out.
 
 	size_t inpos = 0;
 	size_t outpos = 0;
@@ -102,14 +109,20 @@ int city_decompress3 (const uint16_t* in, uint16_t* out, size_t* outsz) {
 
 	while ((v = in[inpos]) != 0xFFFF) {
 
+		while (out[outpos] != 0) outpos++; //means we already placed something there. this can only happen if a 3x3 building was placed.
+
 		if (v & 0x8000) {
 
 			uint8_t c = 3;
 			v = (v & 0x7FFF);
 
-			for (int i=0; i < c; i++)
-				out[outpos++] = v+i;
+			for (int i=0; i < c; i++) {
+				out[outpos+i] = v+i;
+				out[outpos+120+i] = v+i+3;
+				out[outpos+240+i] = v+i+6;
+			}
 			inpos++;
+			outpos += 3;
 
 		} else {
 			out[outpos++] = in[inpos++];
