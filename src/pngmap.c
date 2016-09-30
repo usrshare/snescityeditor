@@ -174,12 +174,12 @@ int read_png_map(const char* pngname, uint16_t* citydata) {
 
 	png_read_image(png_ptr, d_rowptrs);
 
-
 	for (int iy=0; iy < CITYHEIGHT; iy++) {
 		for (int ix=0; ix < CITYWIDTH; ix++) {
 
 			uint32_t rgb = (d_rowptrs[iy][ix*3] << 16) + (d_rowptrs[iy][ix*3+1] << 8) + d_rowptrs[iy][ix*3+2];
-			for (int i=0; i < pngcolor_c; i++) if (rgb == pngcolors[i]) citydata[iy * CITYWIDTH + ix] = i;
+			uint16_t blk = 0xFFFF; for (int i=0; i < pngcolor_c; i++) if (rgb == pngcolors[i]) {blk = i; citydata[iy * CITYWIDTH + ix] = i;}
+			if ((blk == 0xFFFF) && (rgb & 0xFF0000)) citydata[iy * CITYWIDTH + ix] = (rgb & 0xFFFF);
 		}
 	}
 	
