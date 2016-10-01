@@ -48,7 +48,62 @@ uint32_t pngcolors[] = {
 	0x017C01, //25 forest alt SE
 	0x20C020, //26 park
 	0x20A020, //27 park with tree?
-	
+	0xE08000, //28 polluted 1
+	0xE88808, //29 polluted 2
+	0xeeee00, //2a explosion 1
+	0xf0f000, //2b explosion 2
+	0xf4f400, //2c explosion 3
+	0xf8f800, //2d explosion 4
+	0x00f8f8, //2e weird 1
+	0x00fcfc, //2f weird 2
+	0x595959, //30 road 1
+	0x5a5a5a, //31 road 2
+	0x5b5b5b, //32 road 3
+	0x5c5c5c, //33 road 4
+	0x5d5d5d, //34 road 5
+	0x5e5e5e, //35 road 6
+	0x5f5f5f, //36 road 7
+	0x606060, //37 road 8
+	0x616161, //38 road 9
+	0x626262, //39 road 10
+	0x636363, //3a road 11
+	0x646464, //3b road 12
+	0x656565, //3c road 13
+	0x666666, //3d road 14
+	0x676767, //3e road 15
+	0x686868, //3f road 16 
+	0x595959, //40 road+traffic 1
+	0x5a5a5a, //41 road+traffic 2
+	0x5b5b5b, //42 road+traffic 3
+	0x5c5c5c, //43 road+traffic 4
+	0x5d5d5d, //44 road+traffic 5
+	0x5e5e5e, //45 road+traffic 6
+	0x5f5f5f, //46 road+traffic 7
+	0x606060, //47 road+traffic 8
+	0x616161, //48 road+traffic 9
+	0x626262, //49 road+traffic 10
+	0x636363, //4a road+traffic 11
+	0x646464, //4b road+traffic 12
+	0x656565, //4c road+traffic 13
+	0x666666, //4d road+traffic 14
+	0x676767, //4e road+traffic 15
+	0x686868, //4f road+traffic 16 
+	0x595959, //50 road+more traffic 1
+	0x5a5a5a, //51 road+more traffic 2
+	0x5b5b5b, //52 road+more traffic 3
+	0x5c5c5c, //53 road+more traffic 4
+	0x5d5d5d, //54 road+more traffic 5
+	0x5e5e5e, //55 road+more traffic 6
+	0x5f5f5f, //56 road+more traffic 7
+	0x606060, //57 road+more traffic 8
+	0x616161, //58 road+more traffic 9
+	0x626262, //59 road+more traffic 10
+	0x636363, //5a road+more traffic 11
+	0x646464, //5b road+more traffic 12
+	0x656565, //5c road+more traffic 13
+	0x666666, //5d road+more traffic 14
+	0x676767, //5e road+more traffic 15
+	0x686868, //5f road+more traffic 16 
 };
 
 const size_t pngcolor_c = sizeof(pngcolors) / sizeof(*pngcolors);

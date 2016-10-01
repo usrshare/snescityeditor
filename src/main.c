@@ -49,7 +49,7 @@ int city_decompress (const uint16_t* in, uint16_t* out, size_t* outsz) {
 		if (v & 0x4000) {
 
 			uint8_t c = ((v & 0x3C00) >> 10);
-			v = (v & 0x3FF);
+			v = (v & 0x83FF);
 
 			// these operations work on single bytes.
 			size_t rem = 2*c;
@@ -90,7 +90,7 @@ int city_decompress2 (const uint16_t* in, uint16_t* out, size_t* outsz) {
 		if (v & 0x3C00) {
 
 			uint8_t c = ((v & 0x3C00) >> 10) + 1;
-			v = (v & 0x03FF);
+			v = (v & 0x83FF);
 
 			for (int i=0; i < c; i++)
 				out[outpos++] = v;
