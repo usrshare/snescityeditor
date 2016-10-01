@@ -37,6 +37,13 @@ int city_decompress (const uint16_t* in, uint16_t* out, size_t* outsz) {
 	//reimplementation of a procedure located at 03D15F in the American ROM.
 	//this one handles 0x4000 ~ 0x7FFF and 0xC000 ~ 0xFFFE?
 
+	//words that have bit 14 enabled function as backref.
+	// v
+	//01CCCCLL LLLLLLLL
+	//the following C tiles are repeated from
+	//the last L bytes found.
+	//if L < C, then the L-byte pattern is repeated.
+
 	size_t inpos = 0;
 	size_t outpos = 0;
 
@@ -49,7 +56,7 @@ int city_decompress (const uint16_t* in, uint16_t* out, size_t* outsz) {
 		if (v & 0x4000) {
 
 			uint8_t c = ((v & 0x3C00) >> 10);
-			v = (v & 0x83FF);
+			v = (v & 0x03FF);
 
 			// these operations work on single bytes.
 			size_t rem = 2*c;
@@ -78,6 +85,11 @@ int city_decompress (const uint16_t* in, uint16_t* out, size_t* outsz) {
 
 int city_decompress2 (const uint16_t* in, uint16_t* out, size_t* outsz) {
 	//this function handles 0x0400 ~ 0x3FFF and such.
+
+	//words that have bits 10~13 enabled work as simple RLE.
+	//  vvvv
+	//T0CCCCTT TTTTTTTT
+	//the tile specified by T is repeated C+1 times.
 
 	size_t inpos = 0;
 	size_t outpos = 0;
@@ -113,6 +125,12 @@ int city_decompress3 (const uint16_t* in, uint16_t* out, size_t* outsz) {
 	//which are used for placing 3x3 buildings.
 
 	//WARNING: this function assumes that the "out" array is zeroed out.
+	//
+	//words that have bit 15 set place 3x3 sized buildings.
+	//v
+	//100000TT TTTTTTTT
+	//the buildings are placed in the tiles immediately below and to the right of
+	//the tile currently being decompressed.
 
 	size_t inpos = 0;
 	size_t outpos = 0;
