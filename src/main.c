@@ -48,11 +48,19 @@ int city_decompress (const uint16_t* in, uint16_t* out, size_t* outsz) {
 
 		if (v & 0x4000) {
 
-			uint8_t c = ((v & 0x3C00) >> 10) + 1;
+			uint8_t c = ((v & 0x3C00) >> 10);
 			v = (v & 0x3FF);
 
-			for (int i=0; i < c; i++)
-				out[outpos++] = v + c;
+			// these operations work on single bytes.
+			size_t rem = 2*c;
+			size_t i = 0;
+			while (rem > 0) {
+				memcpy((uint8_t*)(out + outpos)+i,(uint8_t*)(out + outpos) - v,rem < v ? rem : v);
+				i += v;
+				rem -= v;
+			}
+
+			outpos += c;
 			inpos++;
 
 		} else {
@@ -239,7 +247,7 @@ int city_compress (const uint16_t* in, uint16_t* out, size_t* outsz) {
 		inpos += repeats;
 	}
 
-	out[outpos] = 0xFFFF;
+	out[outpos++] = 0xFFFF;
 	printf("C: Encoded %#04X bytes into %#04X bytes.\n",inpos*2,outpos*2);
 	if (outsz) *outsz = outpos*2;
 	return 0; //EOF
@@ -486,8 +494,9 @@ int png2city (const char* sfname, const char* mfname, int citynum, int improve) 
 
 	if (improve) city_improve(citydata);
 
-	uint16_t citycomp[CITYWIDTH * CITYHEIGHT];
-	
+	uint16_t citycomp[(CITYSIZE/2)];
+	memset(citycomp,0, CITYSIZE);
+
 	size_t citysize = 0;
 
 	city_compress((const uint16_t*)citydata,(uint16_t*)citycomp,&citysize);
@@ -506,7 +515,7 @@ int png2city (const char* sfname, const char* mfname, int citynum, int improve) 
 	cityfile = fopen(sfname,"wb");
 	if (!cityfile) { perror("Unable to open city file"); return 1; }
 
-	memcpy(citysram + cityoffset[citynum] + CITYMAPSTART, citycomp, citysize + 2);
+	memcpy(citysram + cityoffset[citynum] + CITYMAPSTART, citycomp, citysize);
 
 	for (int i=0; i < 2; i++)
 		citysram[cityheader[i] + 5 + citynum] = 1; //1 means city exists
