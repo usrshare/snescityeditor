@@ -247,7 +247,10 @@ int gfx_decompress (const uint8_t* in, uint8_t* out, size_t* outsz) {
 
 }
 
-int city_compress (const uint16_t* in, uint16_t* out, size_t* outsz) {	
+int city_compress (const uint16_t* in, uint16_t* out, size_t* outsz, size_t max_outsz) {	
+
+	//This method only does simple RLE compression. It doesn't encode buildings and/or patterns.
+	//It may fail when asked to compress a complicated map.
 
 	size_t inpos = 0;
 	size_t outpos = 0;
@@ -263,14 +266,17 @@ int city_compress (const uint16_t* in, uint16_t* out, size_t* outsz) {
 
 		out[outpos++] = v;
 		inpos += repeats;
-	}
 
+		if ( (max_outsz) && (outpos >= (max_outsz/2)) ) {
+			fprintf(stderr,"Unable to compress the map to fit into the buffer size.\n");
+			return 1;
+		}
+	}
 	out[outpos++] = 0xFFFF;
 	printf("C: Encoded %#04X bytes into %#04X bytes.\n",inpos*2,outpos*2);
 	if (outsz) *outsz = outpos*2;
 	return 0; //EOF
 }
-
 
 int city2png (const char* sfname, const char* mfname, int citynum) {
 
@@ -517,7 +523,10 @@ int png2city (const char* sfname, const char* mfname, int citynum, int improve) 
 
 	size_t citysize = 0;
 
-	city_compress((const uint16_t*)citydata,(uint16_t*)citycomp,&citysize);
+	r = city_compress((const uint16_t*)citydata,(uint16_t*)citycomp,&citysize,CITYMAPLEN);
+	if (r) {
+		fprintf(stderr,"Unable to save map into the SRAM file.\n");
+		return 1; }
 	
 	uint8_t citysram [0x8000];
 	memset(citysram,0,sizeof citysram);
