@@ -262,7 +262,7 @@ int city_compress (const uint16_t* in, uint16_t* out, size_t* outsz, size_t max_
 		int repeats = 1;
 		while ( ((inpos + repeats) < CITYAREA) && (in[inpos + repeats] == in[inpos]) && (repeats < 16) ) repeats++;
 
-		v = v | ((repeats-1) * 0x400);
+		v = in[inpos] | ((repeats-1) * 0x400);
 
 		out[outpos++] = v;
 		inpos += repeats;
@@ -395,11 +395,14 @@ int city_improve (uint16_t* city) {
 	for (int iy = 0; iy < CITYHEIGHT; iy++) {
 		for (int ix=0; ix < CITYWIDTH; ix++) {
 
+			uint16_t v = city[iy*CITYWIDTH+ix];
+
+			if ((v >= 0x02) && (v <= 0x13)) {
+			
 			int alttile = ( rand() & 1 ) ? 8 : 0; //use alternative tile?
 
-			if ((city[iy * CITYWIDTH + ix] < 2) || (city[iy*CITYWIDTH+ix] > 0x13)) continue;
-
 			int n = check_neighbors4(city,iy,ix,1,0x13); //water
+			n |= check_neighbors4(city,iy,ix,0x30,0x31); //bridge
 
 			if (n==0) city[iy*CITYWIDTH+ix] = 0;
 
@@ -415,19 +418,14 @@ int city_improve (uint16_t* city) {
 			if ((n & N_W) && (~n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0xA; //S
 			if ((~n & N_W) && (~n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x9; //SW
 			if ((~n & N_W) && (n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x7; //W
-		}
-	}	
-
-	// next step: proper forests.
-
-	for (int iy = 0; iy < CITYHEIGHT; iy++) {
-		for (int ix=0; ix < CITYWIDTH; ix++) {
-
+			
+			} else if ((v >= 0x14) && (v <= 0x25)) {
+				
+			// next step: proper forests.
+			
 			int alttile = ( rand() & 1 ) ? 9 : 0; //use alternative tile?
 
-			if ((city[iy * CITYWIDTH + ix] < 0x14) || (city[iy*CITYWIDTH+ix] > 0x25)) continue;
-
-			int n = check_neighbors4(city,iy,ix,0x14,0x25); //water
+			int n = check_neighbors4(city,iy,ix,0x14,0x25); //forest
 
 			if (n==0) city[iy*CITYWIDTH+ix] = 0;
 
@@ -443,16 +441,8 @@ int city_improve (uint16_t* city) {
 			if ((n & N_W) && (~n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x1C; //S
 			if ((~n & N_W) && (~n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x1A; //SW
 			if ((~n & N_W) && (n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x17; //W
-		}
-	}	
 
-	// roads. this will assume all roads are tiles 0032~003E (no traffic).
-	// this won't modify bridge tiles, but will use them as reference.
-
-	for (int iy = 0; iy < CITYHEIGHT; iy++) {
-		for (int ix=0; ix < CITYWIDTH; ix++) {
-
-			if ((city[iy * CITYWIDTH + ix] >= 0x30) && (city[iy*CITYWIDTH+ix] <= 0x31)) {
+			} else if ((v >= 0x30) && (v <= 0x31)) {
 
 				//this fixes bridges.
 
@@ -461,7 +451,7 @@ int city_improve (uint16_t* city) {
 				if ((n & N_W) || (n & N_E)) city[iy*CITYWIDTH+ix] = 0x30; //h bridge
 				if ((n & N_N) || (n & N_S)) city[iy*CITYWIDTH+ix] = 0x31; //v bridge
 
-			} else if ((city[iy * CITYWIDTH + ix] >= 0x32) && (city[iy*CITYWIDTH+ix] <= 0x3C)) {
+			} else if ((v >= 0x32) && (v <= 0x3C)) {
 
 				//this fixes regular roads.
 
@@ -471,7 +461,7 @@ int city_improve (uint16_t* city) {
 					case  0:
 					case  2:
 					case  8:
-					case 10:city[iy*CITYWIDTH+ix] = 0x32; break;
+					case 10: city[iy*CITYWIDTH+ix] = 0x32; break;
 
 					case  1:
 					case  4:
@@ -493,7 +483,6 @@ int city_improve (uint16_t* city) {
 	}	
 
 }
-
 
 int fixcksum (uint8_t* citysram) {
 
@@ -555,7 +544,6 @@ int png2city (const char* sfname, const char* mfname, int citynum, int improve) 
 	//This procedurre shall load a city from a PNG map, improve its looks if necessary, then create a savefile with a city based on that map in it.
 
 	uint16_t citydata[CITYWIDTH * CITYHEIGHT];
-	memset(citydata,0,sizeof citydata);
 
 	int r = read_png_map(mfname, citydata);	
 	if (r != 0) {
@@ -577,7 +565,9 @@ int png2city (const char* sfname, const char* mfname, int citynum, int improve) 
 
 	//debug
 	FILE* dbgout = fopen("debug_out.bin","wb");
-	if (dbgout) { fwrite(citydata,CITYMAPLEN,1,dbgout); fclose(dbgout); }
+	if (dbgout) { fwrite(citydata,CITYWIDTH * CITYHEIGHT * 2,1,dbgout); fclose(dbgout); }
+	FILE* dbgout2 = fopen("debug_cmp.bin","wb");
+	if (dbgout2) { fwrite(citycomp,CITYMAPLEN,1,dbgout2); fclose(dbgout2); }
 	//end debug
 
 	uint8_t citysram [0x8000];

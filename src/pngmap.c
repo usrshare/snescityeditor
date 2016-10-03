@@ -56,8 +56,8 @@ uint32_t pngcolors[] = {
 	0xf8f800, //2d explosion 4
 	0x00f8f8, //2e weird 1
 	0x00fcfc, //2f weird 2
-	0x424646, //30 horiz bridge
-	0x434747, //31 vert bridge
+	0x424e6e, //30 horiz bridge
+	0x434f6f, //31 vert bridge
 	0x5b5b5b, //32 horiz road
 	0x5c5c5c, //33 vert road
 	0x5d5d5d, //34 N-E turn
@@ -72,8 +72,8 @@ uint32_t pngcolors[] = {
 	0x666666, //3d horiz road w/ power
 	0x676767, //3e vert road w/ power
 	0x686868, //3f unknown tile.
-	0x424646, //40 road+traffic 1
-	0x434747, //41 road+traffic 2
+	0x424e6e, //40 road+traffic 1
+	0x434f6f, //41 road+traffic 2
 	0x5b5b5b, //42 road+traffic 3
 	0x5c5c5c, //43 road+traffic 4
 	0x5d5d5d, //44 road+traffic 5
@@ -88,8 +88,8 @@ uint32_t pngcolors[] = {
 	0x666666, //4d road+traffic 14
 	0x676767, //4e road+traffic 15
 	0x686868, //4f road+traffic 16 
-	0x424646, //50 road+more traffic 1
-	0x434747, //51 road+more traffic 2
+	0x424e6e, //50 road+more traffic 1
+	0x434f6f, //51 road+more traffic 2
 	0x5b5b5b, //52 road+more traffic 3
 	0x5c5c5c, //53 road+more traffic 4
 	0x5d5d5d, //54 road+more traffic 5
@@ -234,7 +234,8 @@ int read_png_map(const char* pngname, uint16_t* citydata) {
 
 			uint32_t rgb = (d_rowptrs[iy][ix*3] << 16) + (d_rowptrs[iy][ix*3+1] << 8) + d_rowptrs[iy][ix*3+2];
 			uint16_t blk = 0xFFFF; for (int i=0; i < pngcolor_c; i++) if (rgb == pngcolors[i]) {blk = i; citydata[iy * CITYWIDTH + ix] = i; break; }
-			if ((blk == 0xFFFF) && (rgb & 0xFF0000)) citydata[iy * CITYWIDTH + ix] = (rgb & 0xFFFF);
+			if ((blk == 0xFFFF) && (rgb & 0xFF0000)) blk = (rgb & 0xFFFF); citydata[iy * CITYWIDTH + ix] = blk;
+			if (blk == 0xFFFF) citydata[iy*CITYWIDTH+ix] = 0x0000;
 		}
 	}
 	
