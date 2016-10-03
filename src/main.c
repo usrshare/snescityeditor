@@ -254,13 +254,13 @@ int city_compress (const uint16_t* in, uint16_t* out, size_t* outsz, size_t max_
 
 	size_t inpos = 0;
 	size_t outpos = 0;
-	
+
 	uint16_t v = 0;
-	
-	while ((v = in[inpos]) != 0xFFFF) {
+
+	while (inpos < CITYAREA) {
 
 		int repeats = 1;
-		while ((in[inpos + repeats] == in[inpos]) && (repeats < 16)) repeats++;
+		while ( ((inpos + repeats) < CITYAREA) && (in[inpos + repeats] == in[inpos]) && (repeats < 16) ) repeats++;
 
 		v = v | ((repeats-1) * 0x400);
 
@@ -343,55 +343,55 @@ int check_neighbors4(uint16_t* citydata, int y, int x, uint16_t tile_min, uint16
 
 	int r = 0;
 	if ((y > 0) && ((citydata[(y-1) * CITYWIDTH + (x)] >= tile_min)
-	                      && (citydata[(y-1) * CITYWIDTH + (x)] <= tile_max)))
-	        		      r |= N_N;
+				&& (citydata[(y-1) * CITYWIDTH + (x)] <= tile_max)))
+		r |= N_N;
 	if ((x > 0) && ((citydata[(y) * CITYWIDTH + (x-1)] >= tile_min)
-	            && (citydata[(y) * CITYWIDTH + (x-1)] <= tile_max)))
-	        		      r |= N_W;
+				&& (citydata[(y) * CITYWIDTH + (x-1)] <= tile_max)))
+		r |= N_W;
 	if ((x<119) && ((citydata[(y) * CITYWIDTH + (x+1)] >= tile_min)
-	            && (citydata[(y) * CITYWIDTH + (x+1)] <= tile_max)))
-	        		      r |= N_E;
+				&& (citydata[(y) * CITYWIDTH + (x+1)] <= tile_max)))
+		r |= N_E;
 	if ((y <99) && ((citydata[(y+1) * CITYWIDTH + (x)] >= tile_min)
-	            && (citydata[(y+1) * CITYWIDTH + (x)] <= tile_max)))
-	        		      r |= N_S;
+				&& (citydata[(y+1) * CITYWIDTH + (x)] <= tile_max)))
+		r |= N_S;
 	return r;
 }
 int check_neighbors(uint16_t* citydata, int y, int x, uint16_t tile_min, uint16_t tile_max) {
 
 	int r = 0;
 	if ((x > 0) && (y > 0) && ((citydata[(y-1) * CITYWIDTH + (x-1)] >= tile_min)
-	                      && (citydata[(y-1) * CITYWIDTH + (x-1)] <= tile_max)))
-	        		      r |= N_NW;
+				&& (citydata[(y-1) * CITYWIDTH + (x-1)] <= tile_max)))
+		r |= N_NW;
 	if (           (y > 0) && ((citydata[(y-1) * CITYWIDTH + (x)] >= tile_min)
-	                      && (citydata[(y-1) * CITYWIDTH + (x)] <= tile_max)))
-	        		      r |= N_N;
+				&& (citydata[(y-1) * CITYWIDTH + (x)] <= tile_max)))
+		r |= N_N;
 	if ((x<119) && (y > 0) && ((citydata[(y-1) * CITYWIDTH + (x+1)] >= tile_min)
-	                      && (citydata[(y-1) * CITYWIDTH + (x+1)] <= tile_max)))
-	        		      r |= N_NE;
+				&& (citydata[(y-1) * CITYWIDTH + (x+1)] <= tile_max)))
+		r |= N_NE;
 	if ((x > 0)            && ((citydata[(y) * CITYWIDTH + (x-1)] >= tile_min)
-	                      && (citydata[(y) * CITYWIDTH + (x-1)] <= tile_max)))
-	        		      r |= N_W;
+				&& (citydata[(y) * CITYWIDTH + (x-1)] <= tile_max)))
+		r |= N_W;
 	if ((x > 0)            && ((citydata[(y) * CITYWIDTH + (x+1)] >= tile_min)
-	                      && (citydata[(y) * CITYWIDTH + (x+1)] <= tile_max)))
-	        		      r |= N_E;
+				&& (citydata[(y) * CITYWIDTH + (x+1)] <= tile_max)))
+		r |= N_E;
 	if ((x > 0) && (y <99) && ((citydata[(y+1) * CITYWIDTH + (x-1)] >= tile_min)
-	                      && (citydata[(y+1) * CITYWIDTH + (x-1)] <= tile_max)))
-	        		      r |= N_SW;
+				&& (citydata[(y+1) * CITYWIDTH + (x-1)] <= tile_max)))
+		r |= N_SW;
 	if (           (y <99) && ((citydata[(y+1) * CITYWIDTH + (x)] >= tile_min)
-	                      && (citydata[(y+1) * CITYWIDTH + (x)] <= tile_max)))
-	        		      r |= N_S;
+				&& (citydata[(y+1) * CITYWIDTH + (x)] <= tile_max)))
+		r |= N_S;
 	if ((x<119) && (y <99) && ((citydata[(y+1) * CITYWIDTH + (x+1)] >= tile_min)
-		              && (citydata[(y+1) * CITYWIDTH + (x+1)] <= tile_max)))
-				      r |= N_SE;
+				&& (citydata[(y+1) * CITYWIDTH + (x+1)] <= tile_max)))
+		r |= N_SE;
 	return r;
 }
 
 int city_improve (uint16_t* city) {
-	
+
 	//this option makes the map look better.
 
 	// let's fix any coastal areas first.
-	
+
 	for (int iy = 0; iy < CITYHEIGHT; iy++) {
 		for (int ix=0; ix < CITYWIDTH; ix++) {
 
@@ -402,7 +402,7 @@ int city_improve (uint16_t* city) {
 			int n = check_neighbors4(city,iy,ix,1,0x13); //water
 
 			if (n==0) city[iy*CITYWIDTH+ix] = 0;
-		
+
 			if ((n == N_W) || (n == N_S) || (n == N_N) || (n == N_E)) city[iy*CITYWIDTH+ix] = 0;
 
 			if ((n & N_W) && (n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = 0x1; //water
@@ -417,7 +417,7 @@ int city_improve (uint16_t* city) {
 			if ((~n & N_W) && (n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x7; //W
 		}
 	}	
-	
+
 	// next step: proper forests.
 
 	for (int iy = 0; iy < CITYHEIGHT; iy++) {
@@ -430,7 +430,7 @@ int city_improve (uint16_t* city) {
 			int n = check_neighbors4(city,iy,ix,0x14,0x25); //water
 
 			if (n==0) city[iy*CITYWIDTH+ix] = 0;
-		
+
 			if ((n == N_W) || (n == N_S) || (n == N_N) || (n == N_E)) city[iy*CITYWIDTH+ix] = 0;
 
 			if ((n & N_W) && (n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x18; //water
@@ -447,34 +447,47 @@ int city_improve (uint16_t* city) {
 	}	
 
 	// roads. this will assume all roads are tiles 0032~003E (no traffic).
-	
+	// this won't modify bridge tiles, but will use them as reference.
+
 	for (int iy = 0; iy < CITYHEIGHT; iy++) {
 		for (int ix=0; ix < CITYWIDTH; ix++) {
 
-			if ((city[iy * CITYWIDTH + ix] < 0x32) || (city[iy*CITYWIDTH+ix] > 0x3C)) continue;
+			if ((city[iy * CITYWIDTH + ix] >= 0x30) && (city[iy*CITYWIDTH+ix] <= 0x31)) {
 
-			int n = check_neighbors4(city,iy,ix,0x32,0x3C); //roads
+				//this fixes bridges.
 
-			switch(n) {
-				case  0:
-				case  2:
-				case  8:
-				case 10:city[iy*CITYWIDTH+ix] = 0x32; break;
+				int n = check_neighbors4(city,iy,ix,0x30,0x3C); //roads
 
-				case  1:
-				case  4:
-				case  5: city[iy*CITYWIDTH+ix] = 0x33; break;
-				
-				case  6: city[iy*CITYWIDTH+ix] = 0x35; break;
-				case  3: city[iy*CITYWIDTH+ix] = 0x34; break;
-				case 12: city[iy*CITYWIDTH+ix] = 0x36; break;
-				case  9: city[iy*CITYWIDTH+ix] = 0x37; break;
-				
-				case 11: city[iy*CITYWIDTH+ix] = 0x38; break;
-				case  7: city[iy*CITYWIDTH+ix] = 0x39; break;
-				case 13: city[iy*CITYWIDTH+ix] = 0x3B; break;
-				case 14: city[iy*CITYWIDTH+ix] = 0x3A; break;
-				case 15: city[iy*CITYWIDTH+ix] = 0x3C; break; 
+				if ((n & N_W) || (n & N_E)) city[iy*CITYWIDTH+ix] = 0x30; //h bridge
+				if ((n & N_N) || (n & N_S)) city[iy*CITYWIDTH+ix] = 0x31; //v bridge
+
+			} else if ((city[iy * CITYWIDTH + ix] >= 0x32) && (city[iy*CITYWIDTH+ix] <= 0x3C)) {
+
+				//this fixes regular roads.
+
+				int n = check_neighbors4(city,iy,ix,0x30,0x3C); //roads
+
+				switch(n) {
+					case  0:
+					case  2:
+					case  8:
+					case 10:city[iy*CITYWIDTH+ix] = 0x32; break;
+
+					case  1:
+					case  4:
+					case  5: city[iy*CITYWIDTH+ix] = 0x33; break;
+
+					case  6: city[iy*CITYWIDTH+ix] = 0x35; break;
+					case  3: city[iy*CITYWIDTH+ix] = 0x34; break;
+					case 12: city[iy*CITYWIDTH+ix] = 0x36; break;
+					case  9: city[iy*CITYWIDTH+ix] = 0x37; break;
+
+					case 11: city[iy*CITYWIDTH+ix] = 0x38; break;
+					case  7: city[iy*CITYWIDTH+ix] = 0x39; break;
+					case 13: city[iy*CITYWIDTH+ix] = 0x3B; break;
+					case 14: city[iy*CITYWIDTH+ix] = 0x3A; break;
+					case 15: city[iy*CITYWIDTH+ix] = 0x3C; break; 
+				}
 			}
 		}
 	}	
@@ -483,7 +496,7 @@ int city_improve (uint16_t* city) {
 
 
 int fixcksum (uint8_t* citysram) {
-	
+
 	uint16_t cksum1 = 0;
 	uint16_t cksum2 = 0;
 
@@ -500,14 +513,14 @@ int fixcksum (uint8_t* citysram) {
 		memcpy(citysram + cityheader[i] + 10,&cksum1,2); //checksum
 		memcpy(citysram + cityheader[i] + 12,&cksum2,2); //checksum
 	}	
-	
+
 	uint16_t hdrcksum = 0;
 	for (int i=0; i < 14; i++) { //the first 14 bytes of the header. (the last 2 are the checksum.)
 
 		hdrcksum += citysram[i];
 	}
 	printf("New check sum for headers: %04X\n",hdrcksum);
-	
+
 	for (int i=0; i < 2; i++) {
 		memcpy(citysram + cityheader[i] + 14,&hdrcksum,2); //checksum
 	}	
@@ -515,18 +528,18 @@ int fixcksum (uint8_t* citysram) {
 }
 
 int fixsram(const char* sfname) {
-	
+
 	uint8_t citysram [0x8000];
 	memset(citysram,0,sizeof citysram);
-	
+
 	FILE* cityfile = fopen(sfname, "rb");
 	if (!cityfile) { perror("Unable to open city file. Will create new city file"); } else {
 
-	fread(citysram,0x8000,1,cityfile);
-	fclose(cityfile);
+		fread(citysram,0x8000,1,cityfile);
+		fclose(cityfile);
 
 	}
-	
+
 	cityfile = fopen(sfname,"wb");
 	if (!cityfile) { perror("Unable to open city file"); return 1; }
 
@@ -540,7 +553,7 @@ int fixsram(const char* sfname) {
 
 int png2city (const char* sfname, const char* mfname, int citynum, int improve) {
 	//This procedurre shall load a city from a PNG map, improve its looks if necessary, then create a savefile with a city based on that map in it.
-	
+
 	uint16_t citydata[CITYWIDTH * CITYHEIGHT];
 	memset(citydata,0,sizeof citydata);
 
@@ -551,32 +564,39 @@ int png2city (const char* sfname, const char* mfname, int citynum, int improve) 
 	}
 
 	if (improve) city_improve(citydata);
-
-	uint16_t citycomp[(CITYSIZE/2)];
-	memset(citycomp,0, CITYSIZE);
+	
+	uint16_t citycomp[(CITYMAPLEN/2)];
+	memset(citycomp,0, CITYMAPLEN);
 
 	size_t citysize = 0;
 
-	r = city_compress((const uint16_t*)citydata,(uint16_t*)citycomp,&citysize,CITYMAPLEN);
+	r = city_compress(citydata,citycomp,&citysize,CITYMAPLEN);
 	if (r) {
-		fprintf(stderr,"Unable to save map into the SRAM file.\n");
+		fprintf(stderr,"Unable to compress map for SRAM.\n");
 		return 1; }
-	
+
+	//debug
+	FILE* dbgout = fopen("debug_out.bin","wb");
+	if (dbgout) { fwrite(citydata,CITYMAPLEN,1,dbgout); fclose(dbgout); }
+	//end debug
+
 	uint8_t citysram [0x8000];
 	memset(citysram,0,sizeof citysram);
-	
+
 	FILE* cityfile = fopen(sfname, "rb");
 	if (!cityfile) { perror("Unable to open city file. Will create new city file"); } else {
 
-	fread(citysram,0x8000,1,cityfile);
-	fclose(cityfile);
+		fread(citysram,0x8000,1,cityfile);
+		fclose(cityfile);
 
 	}
-	
+
 	cityfile = fopen(sfname,"wb");
 	if (!cityfile) { perror("Unable to open city file"); return 1; }
 
 	memcpy(citysram + cityoffset[citynum] + CITYMAPSTART, citycomp, citysize);
+
+	memset(citysram + cityoffset[citynum] + CITYMAPSTART + citysize, 0, CITYMAPLEN - citysize);
 
 	for (int i=0; i < 2; i++)
 		citysram[cityheader[i] + 5 + citynum] = 1; //1 means city exists
@@ -592,74 +612,74 @@ int png2city (const char* sfname, const char* mfname, int citynum, int improve) 
 
 void exit_usage_error(char** argv) {
 	printf("Usage: %s -<ceif> [-2] [-x #] snescity.srm [citymap.png]\n"
-	       " -c: create an SRAM file based on PNG map\n"
-	       " -e: export map from SRAM into PNG\n"
-	       " -i: import map from PNG into SRAM\n"
-	       " -f: fix SRAM file's checksum\n"
-	       " -2: operate on the second city\n"
-	       " -x: fix shores, forests and roads when importing.\n"
-	       "\n",argv[0]); exit(1);}
+			" -c: create an SRAM file based on PNG map\n"
+			" -e: export map from SRAM into PNG\n"
+			" -i: import map from PNG into SRAM\n"
+			" -f: fix SRAM file's checksum\n"
+			" -2: operate on the second city\n"
+			" -x: fix shores, forests and roads when importing.\n"
+			"\n",argv[0]); exit(1);}
 
-int main (int argc, char** argv) {
+	int main (int argc, char** argv) {
 
 #ifdef USE_WIN_UI
-	if (argc == 1) return win_ui_main();
+		if (argc == 1) return win_ui_main();
 #endif
 
-	enum prgmode mode = MODE_NONE;
-	int citynum = 0;
-	int improve = 0;
+		enum prgmode mode = MODE_NONE;
+		int citynum = 0;
+		int improve = 0;
 
 
 
 
-	int c = -1;
-	while ( (c = getopt(argc,argv,"ceif2x")) != -1) {
-		switch(c) {
+		int c = -1;
+		while ( (c = getopt(argc,argv,"ceif2x")) != -1) {
+			switch(c) {
 
-			case 'c':
-				mode = MODE_CREATE;
+				case 'c':
+					mode = MODE_CREATE;
+					break;
+				case 'e':
+					mode = MODE_EXPORT;
+					break;
+				case 'i':
+					mode = MODE_IMPORT;
+					break;
+				case 'f':
+					mode = MODE_FIX;
+					break;
+				case 'x':
+					improve = 1;
+					break;
+				case '2':
+					citynum = 1;
+					break;
+			}
+		}
+
+		if (mode == MODE_NONE) exit_usage_error(argv);
+
+		const char* sfname = argv[optind];
+		const char* mfname = argv[optind+1];
+
+		switch(mode) {
+			case MODE_CREATE:
+				fprintf(stderr,"Create mode not implemented yet.\n");
 				break;
-			case 'e':
-				mode = MODE_EXPORT;
+			case MODE_EXPORT:
+				if ((!sfname) || (!mfname)) exit_usage_error(argv);
+				city2png(sfname,mfname,citynum);
 				break;
-			case 'i':
-				mode = MODE_IMPORT;
+			case MODE_IMPORT:
+				if ((!sfname) || (!mfname)) exit_usage_error(argv);
+				png2city(sfname,mfname,citynum,improve);
 				break;
-			case 'f':
-				mode = MODE_FIX;
-				break;
-			case 'x':
-				improve = 1;
-				break;
-			case '2':
-				citynum = 1;
+			case MODE_FIX:
+				if ((!sfname)) exit_usage_error(argv);
+				fixsram(sfname);
+			default:
 				break;
 		}
+		return 0;
 	}
-
-	if (mode == MODE_NONE) exit_usage_error(argv);
-
-	const char* sfname = argv[optind];
-	const char* mfname = argv[optind+1];
-
-	switch(mode) {
-		case MODE_CREATE:
-			fprintf(stderr,"Create mode not implemented yet.\n");
-			break;
-		case MODE_EXPORT:
-			if ((!sfname) || (!mfname)) exit_usage_error(argv);
-			city2png(sfname,mfname,citynum);
-			break;
-		case MODE_IMPORT:
-			if ((!sfname) || (!mfname)) exit_usage_error(argv);
-			png2city(sfname,mfname,citynum,improve);
-			break;
-		case MODE_FIX:
-			if ((!sfname)) exit_usage_error(argv);
-			fixsram(sfname);
-		default:
-			break;
-	}
-	return 0;
-}

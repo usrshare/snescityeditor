@@ -4,4 +4,6 @@
 #define CITYWIDTH 120
 #define CITYHEIGHT 100
 
+#define CITYAREA (CITYWIDTH * CITYHEIGHT)
+
 #endif

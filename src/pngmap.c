@@ -56,8 +56,8 @@ uint32_t pngcolors[] = {
 	0xf8f800, //2d explosion 4
 	0x00f8f8, //2e weird 1
 	0x00fcfc, //2f weird 2
-	0x595959, //30 horiz bridge
-	0x5a5a5a, //31 vert bridge
+	0x424646, //30 horiz bridge
+	0x434747, //31 vert bridge
 	0x5b5b5b, //32 horiz road
 	0x5c5c5c, //33 vert road
 	0x5d5d5d, //34 N-E turn
@@ -72,8 +72,8 @@ uint32_t pngcolors[] = {
 	0x666666, //3d horiz road w/ power
 	0x676767, //3e vert road w/ power
 	0x686868, //3f unknown tile.
-	0x595959, //40 road+traffic 1
-	0x5a5a5a, //41 road+traffic 2
+	0x424646, //40 road+traffic 1
+	0x434747, //41 road+traffic 2
 	0x5b5b5b, //42 road+traffic 3
 	0x5c5c5c, //43 road+traffic 4
 	0x5d5d5d, //44 road+traffic 5
@@ -88,8 +88,8 @@ uint32_t pngcolors[] = {
 	0x666666, //4d road+traffic 14
 	0x676767, //4e road+traffic 15
 	0x686868, //4f road+traffic 16 
-	0x595959, //50 road+more traffic 1
-	0x5a5a5a, //51 road+more traffic 2
+	0x424646, //50 road+more traffic 1
+	0x434747, //51 road+more traffic 2
 	0x5b5b5b, //52 road+more traffic 3
 	0x5c5c5c, //53 road+more traffic 4
 	0x5d5d5d, //54 road+more traffic 5
