@@ -329,13 +329,13 @@ int vtile(int y, int x) { return ( (y > 0) && (y < (CITYHEIGHT-1)) && (x > 0) &&
 
 enum neighbors {
 	N_X = 0,
-	N_NW = 1,
-	N_N = 2,
-	N_NE = 4,
+	N_N = 1,
+	N_E = 2,
+	N_S = 4,
 	N_W = 8,
-	N_E = 16,
-	N_SW = 32,
-	N_S = 64,
+	N_NW = 16,
+	N_NE = 32,
+	N_SW = 64,
 	N_SE = 128
 };
 
@@ -445,6 +445,40 @@ int city_improve (uint16_t* city) {
 			if ((~n & N_W) && (n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x17; //W
 		}
 	}	
+
+	// roads. this will assume all roads are tiles 0032~003E (no traffic).
+	
+	for (int iy = 0; iy < CITYHEIGHT; iy++) {
+		for (int ix=0; ix < CITYWIDTH; ix++) {
+
+			if ((city[iy * CITYWIDTH + ix] < 0x32) || (city[iy*CITYWIDTH+ix] > 0x3C)) continue;
+
+			int n = check_neighbors4(city,iy,ix,0x32,0x3C); //roads
+
+			switch(n) {
+				case  0:
+				case  2:
+				case  8:
+				case 10:city[iy*CITYWIDTH+ix] = 0x32; break;
+
+				case  1:
+				case  4:
+				case  5: city[iy*CITYWIDTH+ix] = 0x33; break;
+				
+				case  6: city[iy*CITYWIDTH+ix] = 0x35; break;
+				case  3: city[iy*CITYWIDTH+ix] = 0x34; break;
+				case 12: city[iy*CITYWIDTH+ix] = 0x36; break;
+				case  9: city[iy*CITYWIDTH+ix] = 0x37; break;
+				
+				case 11: city[iy*CITYWIDTH+ix] = 0x38; break;
+				case  7: city[iy*CITYWIDTH+ix] = 0x39; break;
+				case 13: city[iy*CITYWIDTH+ix] = 0x3B; break;
+				case 14: city[iy*CITYWIDTH+ix] = 0x3A; break;
+				case 15: city[iy*CITYWIDTH+ix] = 0x3C; break; 
+			}
+		}
+	}	
+
 }
 
 
@@ -563,8 +597,7 @@ void exit_usage_error(char** argv) {
 	       " -i: import map from PNG into SRAM\n"
 	       " -f: fix SRAM file's checksum\n"
 	       " -2: operate on the second city\n"
-	       " -x #: set level of map improvement.\n"
-	       "       if more than 0, this tool will fix shoreline and forests.\n"
+	       " -x: fix shores, forests and roads when importing.\n"
 	       "\n",argv[0]); exit(1);}
 
 int main (int argc, char** argv) {
@@ -581,7 +614,7 @@ int main (int argc, char** argv) {
 
 
 	int c = -1;
-	while ( (c = getopt(argc,argv,"ceif2x:")) != -1) {
+	while ( (c = getopt(argc,argv,"ceif2x")) != -1) {
 		switch(c) {
 
 			case 'c':
@@ -597,7 +630,7 @@ int main (int argc, char** argv) {
 				mode = MODE_FIX;
 				break;
 			case 'x':
-				improve = atoi(optarg);
+				improve = 1;
 				break;
 			case '2':
 				citynum = 1;

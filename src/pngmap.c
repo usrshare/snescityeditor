@@ -56,22 +56,22 @@ uint32_t pngcolors[] = {
 	0xf8f800, //2d explosion 4
 	0x00f8f8, //2e weird 1
 	0x00fcfc, //2f weird 2
-	0x595959, //30 road 1
-	0x5a5a5a, //31 road 2
-	0x5b5b5b, //32 road 3
-	0x5c5c5c, //33 road 4
-	0x5d5d5d, //34 road 5
-	0x5e5e5e, //35 road 6
-	0x5f5f5f, //36 road 7
-	0x606060, //37 road 8
-	0x616161, //38 road 9
-	0x626262, //39 road 10
-	0x636363, //3a road 11
-	0x646464, //3b road 12
-	0x656565, //3c road 13
-	0x666666, //3d road 14
-	0x676767, //3e road 15
-	0x686868, //3f road 16 
+	0x595959, //30 horiz bridge
+	0x5a5a5a, //31 vert bridge
+	0x5b5b5b, //32 horiz road
+	0x5c5c5c, //33 vert road
+	0x5d5d5d, //34 N-E turn
+	0x5e5e5e, //35 S-E turn
+	0x5f5f5f, //36 S-W turn
+	0x606060, //37 N-W turn
+	0x616161, //38 W-N-E crossing
+	0x626262, //39 N-E-S crossing
+	0x636363, //3a W-S-E crossing
+	0x646464, //3b N-W-S crossing
+	0x656565, //3c 4-way crossing
+	0x666666, //3d horiz road w/ power
+	0x676767, //3e vert road w/ power
+	0x686868, //3f unknown tile.
 	0x595959, //40 road+traffic 1
 	0x5a5a5a, //41 road+traffic 2
 	0x5b5b5b, //42 road+traffic 3
@@ -233,7 +233,7 @@ int read_png_map(const char* pngname, uint16_t* citydata) {
 		for (int ix=0; ix < CITYWIDTH; ix++) {
 
 			uint32_t rgb = (d_rowptrs[iy][ix*3] << 16) + (d_rowptrs[iy][ix*3+1] << 8) + d_rowptrs[iy][ix*3+2];
-			uint16_t blk = 0xFFFF; for (int i=0; i < pngcolor_c; i++) if (rgb == pngcolors[i]) {blk = i; citydata[iy * CITYWIDTH + ix] = i;}
+			uint16_t blk = 0xFFFF; for (int i=0; i < pngcolor_c; i++) if (rgb == pngcolors[i]) {blk = i; citydata[iy * CITYWIDTH + ix] = i; break; }
 			if ((blk == 0xFFFF) && (rgb & 0xFF0000)) citydata[iy * CITYWIDTH + ix] = (rgb & 0xFFFF);
 		}
 	}
