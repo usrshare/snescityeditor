@@ -241,6 +241,14 @@ int sdl_ui_main(void) {
 					if ((mousecoords.x < 0) || mousecoords.y >= 256) mousecoords.valid = 0;
 					if ((mousecoords.y < 0) || mousecoords.y >= 224) mousecoords.valid = 0;
 					break;
+				case SDL_MOUSEBUTTONDOWN:
+				case SDL_MOUSEBUTTONUP:
+
+					if (lastevent.button.state == SDL_PRESSED)
+						mousecoords.buttons |= (1 << (lastevent.button.button));
+					else 
+						mousecoords.buttons &= ~ (1 << (lastevent.button.button));
+					break;
 				case SDL_WINDOWEVENT:
 					if (lastevent.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {rerender = 1; break; }
 					if (lastevent.window.event != SDL_WINDOWEVENT_SIZE_CHANGED) break;
