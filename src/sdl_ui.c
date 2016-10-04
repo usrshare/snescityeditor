@@ -98,14 +98,32 @@ int sdl_ui_main(void) {
 	for (int ix=0; ix < 16; ix++) {
 		spr(68,ix*16,0,2,2);
 		
-		for (int iy=4; iy < 18; iy++) spr(68,ix*16,iy*16,2,2);
+		for (int iy=4; iy < 14; iy++) spr(68,ix*16,iy*16,2,2);
 	}
+
+	spr(68,0,16,2,2);
+	spr(0,16,16,2,2);
+	for (int ix=2; ix<14; ix++) spr(2,ix*16,16,2,2);
+	spr(4,224,16,2,2);
+	spr(68,240,16,2,2);
+
+	spr(68,0,32,2,2);
+	spr(32,16,32,2,2);
+	for (int ix=2; ix<14; ix++) spr(34,ix*16,32,2,2);
+	spr(36,224,32,2,2);
+	spr(68,240,32,2,2);
+	
+	spr(68,0,48,2,2);
+	spr(64,16,48,2,2);
+	for (int ix=2; ix<14; ix++) spr(66,ix*16,48,2,2);
+	spr(68,224,48,2,2);
+	spr(68,240,48,2,2);
 
 
 	//SDL_Rect bgrect = {.x=0,.y=0,.w=256,.h=224};
 	//SDL_FillRect(scs, &bgrect, SDL_MapRGB(scs->format,79,40,15));
 
-	s_addstr_c("SNESCITYEDITOR",40);
+	s_addstr_c("SNESCITYEDITOR",32);
 
 	//        123456789012345678901234
 	s_addstr("  THIS GRAPHICAL UI IS  \n"
