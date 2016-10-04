@@ -84,40 +84,48 @@ int sdl_ui_main(void) {
 
 
 	scs = SDL_CreateRGBSurface(0,256,224,32,0x00FF0000,0x0000FF00,0x000000FF,0xFF000000);
-	
+
 	if (!scs) {
 		fprintf(stderr,"Unable to create surface: %s\n",SDL_GetError()); exit(1); }
 
 	SDL_Texture* tex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,256,224);
-	
+
 	if (!tex) {
 		fprintf(stderr,"Unable to create texture: %s\n",SDL_GetError()); exit(1); }
 
 	tsurf = IMG_ReadXPMFromArray(textures_xpm);
 
-	for (int ix=0; ix < 16; ix++) {
-		spr(68,ix*16,0,2,2);
-		
-		for (int iy=4; iy < 14; iy++) spr(68,ix*16,iy*16,2,2);
+	for (int iy=0; iy < 14; iy++) {
+		for (int ix=0; ix < 16; ix++) {
+			spr(68,ix*16,iy*16,2,2);
+		}
 	}
 
-	spr(68,0,16,2,2);
 	spr(0,16,16,2,2);
 	for (int ix=2; ix<14; ix++) spr(2,ix*16,16,2,2);
 	spr(4,224,16,2,2);
-	spr(68,240,16,2,2);
 
-	spr(68,0,32,2,2);
 	spr(32,16,32,2,2);
 	for (int ix=2; ix<14; ix++) spr(34,ix*16,32,2,2);
 	spr(36,224,32,2,2);
-	spr(68,240,32,2,2);
-	
-	spr(68,0,48,2,2);
+
 	spr(64,16,48,2,2);
 	for (int ix=2; ix<14; ix++) spr(66,ix*16,48,2,2);
 	spr(68,224,48,2,2);
-	spr(68,240,48,2,2);
+	
+	spr(6,16,64,2,2);
+	for (int ix=2; ix<14; ix++) spr(8,ix*16,64,2,2);
+	spr(10,224,64,2,2);
+
+	for (int iy=5; iy < 12; iy++) {
+	spr(38,16,iy*16,2,2);
+	for (int ix=2; ix<14; ix++) spr(40,ix*16,iy*16,2,2);
+	spr(42,224,iy*16,2,2);
+	}
+
+	spr(70,16,192,2,2);
+	for (int ix=2; ix<14; ix++) spr(72,ix*16,192,2,2);
+	spr(74,224,192,2,2);
 
 
 	//SDL_Rect bgrect = {.x=0,.y=0,.w=256,.h=224};
@@ -127,11 +135,11 @@ int sdl_ui_main(void) {
 
 	//        123456789012345678901234
 	s_addstr("  THIS GRAPHICAL UI IS  \n"
-		 "  NOT YET IMPLEMENTED.\n"
-		 "BUT YOU CAN ALREADY SEE\n"
-		 "THE SNES-LIKE NON-SQUARE\n"
-		 "PIXEL SCALING AND SUCH.\n"
-		 "\n",32,80);
+			"  NOT YET IMPLEMENTED.\n"
+			"BUT YOU CAN ALREADY SEE\n"
+			"THE SNES-LIKE NON-SQUARE\n"
+			"PIXEL SCALING AND SUCH.\n"
+			"\n",32,80);
 
 
 	SDL_Event lastevent;
@@ -142,7 +150,7 @@ int sdl_ui_main(void) {
 	while ( (loop) && (SDL_WaitEvent(&lastevent)) ) {
 
 		if (rerender) {
-	
+
 			SDL_UpdateTexture(tex, NULL, scs->pixels, scs->pitch);
 			SDL_RenderClear(ren);
 			SDL_RenderCopy(ren, tex, NULL, NULL);
@@ -154,7 +162,7 @@ int sdl_ui_main(void) {
 		switch(lastevent.type) {
 			case SDL_WINDOWEVENT:
 				if (lastevent.window.event != SDL_WINDOWEVENT_SIZE_CHANGED) break;
-				
+
 				SDL_GetWindowSize(mainwin,&win_w,&win_h);
 				SDL_Rect newsize = boxify();
 				SDL_RenderSetViewport(ren, &newsize);
@@ -165,7 +173,7 @@ int sdl_ui_main(void) {
 		}
 
 		if (rerender) {
-	
+
 			SDL_UpdateTexture(tex, NULL, scs->pixels, scs->pitch);
 			SDL_RenderClear(ren);
 			SDL_RenderCopy(ren, tex, NULL, NULL);
