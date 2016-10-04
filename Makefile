@@ -15,11 +15,11 @@ else
 DEFS += -g
 endif
 
-ifdef WIN_UI
-_OBJS += win_ui.o
-DEFS += -DUSE_WIN_UI
-CFLAGS += -I/usr/include/w32api
-LDFLAGS = -mwindows $(shell libpng-config --static --ldflags)
+ifdef SDL_UI
+_OBJS += sdl_ui.o
+DEFS += -DUSE_SDL_UI
+CFLAGS += $(shell sdl2-config --cflags)
+LDFLAGS += $(shell sdl2-config --libs)
 endif
 
 CC = $(PREFIX)$(_CC)

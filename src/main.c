@@ -7,8 +7,8 @@
 #include "defines.h"
 #include "pngmap.h"
 
-#ifdef USE_WIN_UI
-#include "win_ui.h"
+#ifdef USE_SDL_UI
+#include "sdl_ui.h"
 #endif
 
 #ifndef __CYGWIN__
@@ -612,8 +612,8 @@ void exit_usage_error(char** argv) {
 
 	int main (int argc, char** argv) {
 
-#ifdef USE_WIN_UI
-		if (argc == 1) return win_ui_main();
+#ifdef USE_SDL_UI
+		if (argc == 1) return sdl_ui_main();
 #endif
 
 		enum prgmode mode = MODE_NONE;
