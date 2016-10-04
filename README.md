@@ -14,6 +14,8 @@ By appending "SDL\_UI=1" to the **make** command, the user may try and compile a
 
 # Usage
 
+## Command line
+
 The program runs on a command line and takes arguments in a following format:
 
     snescityeditor -<eif> [-2] [-x] sramfile.srm mapfile.png
@@ -31,6 +33,14 @@ Optional switches are as follows:
 * **-2** will make the program operate on the second city in the SRAM file. This switch is unnecessary when usingg -f, as it updates all checksums.
 
 * **-x** will set a level of improvement on maps that are imported into the game. Right now, it will redraw the roads/bridges, the coastline and the forests to make sure they look smooth (given that one is placed in the PNG map). This parameter is practically necessary when drawing maps from scratch, as different kinds of coastline/forest use slightly different shades of a similar color.
+
+## Graphical interface
+
+When compiled with "SDL\_UI=1", the program opens with a menu providing different operations. This menu doesn't provide the entire functionality of the command line version, and its output is very limited (it doesn't tell different errors apart or prevent a user from making bad decisions), but it should work for the most basic needs.
+
+You can select different options by clicking on them. After selecting an option, the program will ask for the SRAM and PNG files to be dropped into its window. The program may also ask which one of the two cities in the SRAM file should be loaded. Be warned that it doesn't prevent the user from choosing an empty city - the program will still report success, but the imported city won't load anyway.
+
+After all the parameters are specified, the program will either report "success" or "error". The only way from either of those screens is by closing the program window.
 
 # Bugs
 
