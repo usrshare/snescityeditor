@@ -4,6 +4,7 @@
 #include <SDL_image.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <limits.h>
 
 #include "snescity.h"
 
