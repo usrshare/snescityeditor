@@ -310,6 +310,8 @@ int sdl_ui_update(void) {
 				
 				s_addstr_c("error.",112,0);
 				
+				s_addstr_c(city_lasterror,136,0);
+				
 				
 				s_addstr_c("close the window to exit.",160,0);
 

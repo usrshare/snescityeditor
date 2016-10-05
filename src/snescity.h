@@ -1,6 +1,8 @@
 #ifndef SNESCITY_H
 #define SNESCITY_H
 
+extern char* city_lasterror;
+
 int city2png (const char* sfname, const char* mfname, int citynum);
 int png2city (const char* sfname, const char* mfname, int citynum, int improve);
 int fixsram (const char* sfname);

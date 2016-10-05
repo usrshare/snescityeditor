@@ -12,6 +12,8 @@ const size_t cityheader[2] = {0, 0x7FF0};
 const size_t cityoffset[2] = {0x10, 0x4000};
 const char* months[] = {"???","JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"};
 
+char* city_lasterror = "no error.";
+
 #define CITYSIZE 0x3FE0 //the size of city data
 #define CITYMAPSTART 0xBF0 //offset for the city map
 #define CITYMAPLEN 0x3400 //size of the city map
@@ -252,6 +254,7 @@ int city_compress (const uint16_t* in, uint16_t* out, size_t* outsz, size_t max_
 
 		if ( (max_outsz) && (outpos >= (max_outsz/2)) ) {
 			fprintf(stderr,"Unable to compress the map to fit into the buffer size.\n");
+			city_lasterror = "City map too complex.";
 			return 1;
 		}
 	}
@@ -264,7 +267,7 @@ int city_compress (const uint16_t* in, uint16_t* out, size_t* outsz, size_t max_
 int city2png (const char* sfname, const char* mfname, int citynum) {
 
 	FILE* cityfile = fopen(sfname, "rb");
-	if (!cityfile) { perror("fopen city file"); return 1; }
+	if (!cityfile) { perror("fopen city file"); city_lasterror = "unable to open city file."; return 1; }
 
 	// read city
 
@@ -505,7 +508,7 @@ int describe_cities (const char* sfname, char* city1, char* city2) {
 	memset(citysram,0,sizeof citysram);
 
 	FILE* cityfile = fopen(sfname, "rb");
-	if (!cityfile) { perror("Unable to open city file."); return 1; }
+	if (!cityfile) { perror("Unable to open city file."); city_lasterror = "unable to open city file."; return 1; }
 
 	fread(citysram,0x8000,1,cityfile);
 	fclose(cityfile);
@@ -552,7 +555,7 @@ int fixsram(const char* sfname) {
 	}
 
 	cityfile = fopen(sfname,"wb");
-	if (!cityfile) { perror("Unable to open city file"); return 1; }
+	if (!cityfile) { perror("Unable to open city file"); city_lasterror = "unable to open city file."; return 1; }
 
 	fixcksum(citysram);
 
@@ -570,6 +573,7 @@ int png2city (const char* sfname, const char* mfname, int citynum, int improve) 
 	int r = read_png_map(mfname, citydata);	
 	if (r != 0) {
 		fprintf(stderr,"Failed to read the PNG city map.\n");
+		city_lasterror = "Can not read the PNG.\n";
 		return 1;
 	}
 
@@ -604,7 +608,9 @@ int png2city (const char* sfname, const char* mfname, int citynum, int improve) 
 	}
 
 	cityfile = fopen(sfname,"wb");
-	if (!cityfile) { perror("Unable to open city file"); return 1; }
+	if (!cityfile) { perror("Unable to open city file"); 
+		city_lasterror = "unable to open city file.";
+		return 1; }
 
 	memcpy(citysram + cityoffset[citynum] + CITYMAPSTART, citycomp, citysize);
 
