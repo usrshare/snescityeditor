@@ -32,7 +32,11 @@ Optional switches are as follows:
 
 * **-2** will make the program operate on the second city in the SRAM file. This switch is unnecessary when usingg -f, as it updates all checksums.
 
-* **-x** will set a level of improvement on maps that are imported into the game. Right now, it will redraw the roads/bridges, the coastline and the forests to make sure they look smooth (given that one is placed in the PNG map). This parameter is practically necessary when drawing maps from scratch, as different kinds of coastline/forest use slightly different shades of a similar color.
+* **-x** will tell the game that the map needs to be "improved" before being imported into the game. This involves redrawing the roads, bridges, the coastline and the forests to make sure they look smooth. Given that, most of the time, the map is drawn with solid colors, this is practically necessary to achieve a good-looking map.
+
+* **-I** allows to specify binary flags that can change how the improvement process works. To select the flags, add up the numbers listed below:
+
+  1: draw a minimal coastline from scratch instead of fixing the already existing one.
 
 ## Graphical interface
 

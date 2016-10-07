@@ -45,11 +45,11 @@ void exit_usage_error(char** argv) {
 		int citynum = 0;
 		int improve = 0;
 
-
+		int improve_flags = 0;
 
 
 		int c = -1;
-		while ( (c = getopt(argc,argv,"ceif2x")) != -1) {
+		while ( (c = getopt(argc,argv,"ceiI:f2x")) != -1) {
 			switch(c) {
 
 				case 'c':
@@ -60,6 +60,9 @@ void exit_usage_error(char** argv) {
 					break;
 				case 'i':
 					mode = MODE_IMPORT;
+					break;
+				case 'I':
+					improve_flags = atoi(optarg);
 					break;
 				case 'f':
 					mode = MODE_FIX;
@@ -88,7 +91,7 @@ void exit_usage_error(char** argv) {
 				break;
 			case MODE_IMPORT:
 				if ((!sfname) || (!mfname)) exit_usage_error(argv);
-				png2city(sfname,mfname,citynum,improve);
+				png2city(sfname,mfname,citynum,improve,improve_flags);
 				break;
 			case MODE_FIX:
 				if ((!sfname)) exit_usage_error(argv);

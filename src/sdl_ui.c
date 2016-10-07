@@ -261,7 +261,7 @@ int sdl_ui_update(void) {
 				switch (sdl_ui_operation) {
 
 					case 0:
-						r = png2city(city_fname,map_fname,citynum,1);
+						r = png2city(city_fname,map_fname,citynum,1,0);
 						break;
 					case 1:
 						r = fixsram(city_fname);

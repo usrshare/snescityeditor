@@ -372,7 +372,7 @@ int check_neighbors(uint16_t* citydata, int y, int x, uint16_t tile_min, uint16_
 	return r;
 }
 
-int city_improve (uint16_t* city) {
+int city_improve (uint16_t* city, int improve_flags) {
 
 	//this option makes the map look better.
 
@@ -383,7 +383,23 @@ int city_improve (uint16_t* city) {
 
 			uint16_t v = city[iy*CITYWIDTH+ix];
 
-			if ((v >= 0x02) && (v <= 0x13)) {
+			if ((improve_flags & 1) && (v == 0x00)) {
+
+				int alttile = ( rand() & 1 ) ? 8 : 0; //use alternative tile?
+
+				int n = check_neighbors4(city,iy,ix,1,1); //water
+				n |= check_neighbors4(city,iy,ix,0x30,0x31); //bridge
+
+				if ((~n & N_W) && (n & N_S) && (~n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x4; //NW
+				if ((n & N_W) && (n & N_S) && (~n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x5; //N
+				if ((n & N_W) && (n & N_S) && (~n & N_N) && (~n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x6; //NE
+				if ((n & N_W) && (n & N_S) && (n & N_N) && (~n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x8; //E
+				if ((n & N_W) && (~n & N_S) && (n & N_N) && (~n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0xB; //SE
+				if ((n & N_W) && (~n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0xA; //S
+				if ((~n & N_W) && (~n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x9; //SW
+				if ((~n & N_W) && (n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x7; //W
+
+			} else if ((v >= 0x02) && (v <= 0x13)) {
 
 				int alttile = ( rand() & 1 ) ? 8 : 0; //use alternative tile?
 
@@ -400,12 +416,14 @@ int city_improve (uint16_t* city) {
 				if ((n & N_W) && (n & N_S) && (~n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x5; //N
 				if ((n & N_W) && (n & N_S) && (~n & N_N) && (~n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x6; //NE
 				if ((n & N_W) && (n & N_S) && (n & N_N) && (~n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x8; //E
-				if ((n & N_W) && (~n & N_S) && (n & N_N) && (~n & N_E)) city[iy*CITYWIDTH+ix] = 0xB; //SE
+				if ((n & N_W) && (~n & N_S) && (n & N_N) && (~n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0xB; //SE
 				if ((n & N_W) && (~n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0xA; //S
 				if ((~n & N_W) && (~n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x9; //SW
 				if ((~n & N_W) && (n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x7; //W
 
-			} else if ((v >= 0x14) && (v <= 0x25)) {
+			}
+
+			if ((v >= 0x14) && (v <= 0x25)) {
 
 				// next step: proper forests.
 
@@ -565,7 +583,7 @@ int fixsram(const char* sfname) {
 }
 
 
-int png2city (const char* sfname, const char* mfname, int citynum, int improve) {
+int png2city (const char* sfname, const char* mfname, int citynum, int improve, int improve_flags) {
 	//This procedurre shall load a city from a PNG map, improve its looks if necessary, then create a savefile with a city based on that map in it.
 
 	uint16_t citydata[CITYWIDTH * CITYHEIGHT];
@@ -577,7 +595,7 @@ int png2city (const char* sfname, const char* mfname, int citynum, int improve) 
 		return 1;
 	}
 
-	if (improve) city_improve(citydata);
+	if (improve) city_improve(citydata, improve_flags);
 
 	uint16_t citycomp[(CITYMAPLEN/2)];
 	memset(citycomp,0, CITYMAPLEN);
