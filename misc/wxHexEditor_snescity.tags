@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <wxHexEditor_XML_TAG>
-  <filename path="/home/d1337r/snescityeditor/misc/wxHexEditor_snescity">
+  <filename path="/home/d1337r/snescityeditor/simcity.srm">
     <TAG id="0">
       <start_offset>0</start_offset>
       <end_offset>2</end_offset>
@@ -49,6 +49,69 @@
       <tag_text>City 1 Money</tag_text>
       <font_colour>#101010</font_colour>
       <note_colour>#717476</note_colour>
+    </TAG>
+    <TAG id="7">
+      <start_offset>48</start_offset>
+      <end_offset>49</end_offset>
+      <tag_text>City 1 year</tag_text>
+      <font_colour>#101010</font_colour>
+      <note_colour>#1FFEFA</note_colour>
+    </TAG>
+    <TAG id="8">
+      <start_offset>50</start_offset>
+      <end_offset>50</end_offset>
+      <tag_text>City 1 month</tag_text>
+      <font_colour>#101010</font_colour>
+      <note_colour>#1FFEFA</note_colour>
+    </TAG>
+    <TAG id="9">
+      <start_offset>52</start_offset>
+      <end_offset>52</end_offset>
+      <tag_text>City 1 tax rate</tag_text>
+      <font_colour>#101010</font_colour>
+      <note_colour>#1FFEFA</note_colour>
+    </TAG>
+    <TAG id="10">
+      <start_offset>60</start_offset>
+      <end_offset>63</end_offset>
+      <tag_text>City 1 population</tag_text>
+      <font_colour>#101010</font_colour>
+      <note_colour>#98EED7</note_colour>
+    </TAG>
+    <TAG id="11">
+      <start_offset>118</start_offset>
+      <end_offset>118</end_offset>
+      <tag_text>City 1 name length</tag_text>
+      <font_colour>#101010</font_colour>
+      <note_colour>#347890</note_colour>
+    </TAG>
+    <TAG id="12">
+      <start_offset>119</start_offset>
+      <end_offset>126</end_offset>
+      <tag_text>City 1 name</tag_text>
+      <font_colour>#101010</font_colour>
+      <note_colour>#439BBA</note_colour>
+    </TAG>
+    <TAG id="13">
+      <start_offset>134</start_offset>
+      <end_offset>135</end_offset>
+      <tag_text>City 1 history item 1 year</tag_text>
+      <font_colour>#101010</font_colour>
+      <note_colour>#98EEC4</note_colour>
+    </TAG>
+    <TAG id="14">
+      <start_offset>136</start_offset>
+      <end_offset>136</end_offset>
+      <tag_text>City 1 history item 1 month</tag_text>
+      <font_colour>#101010</font_colour>
+      <note_colour>#98EED7</note_colour>
+    </TAG>
+    <TAG id="15">
+      <start_offset>3072</start_offset>
+      <end_offset>16383</end_offset>
+      <tag_text>City 1 Map</tag_text>
+      <font_colour>#101010</font_colour>
+      <note_colour>#98ECEE</note_colour>
     </TAG>
   </filename>
 </wxHexEditor_XML_TAG>
