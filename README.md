@@ -48,7 +48,9 @@ After all the parameters are specified, the program will either report "success"
 
 # Bugs
 
-The program does not, as of yet, completely understand the decryption format used by the game in order to create SRAM files. It will most likely fail to extract maps from any savefiles that include buildings.
+The program only performs a simplified compression routine on maps when importing them into the game. This means that a complex map, including lots of buildings or complex river/forest patterns, might be impossible to import back.
+
+The program doesn't report every single error when importing a map. If the map is malformed, it might result in a glitched city in the game.
 
 It only modifies the city map and none of the other variables, so it might cause glitches when replacing a city map that already had buildings/citizens/etc. 
 
