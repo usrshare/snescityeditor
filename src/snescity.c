@@ -18,6 +18,24 @@ char* city_lasterror = "no error.";
 #define CITYMAPSTART 0xBF0 //offset for the city map
 #define CITYMAPLEN 0x3400 //size of the city map
 
+int find_png_filename(const char* filename, char* o_f) {
+
+	const char* nstart = filename;
+	
+	char* x = strrchr(filename,'/');
+	if (x) nstart = x+1; else {
+	x = strrchr(filename,'\\');
+	if (x) nstart = x+1;
+	}
+
+	size_t strl = strlen(nstart);
+	char* d = strrchr(filename,'.');
+
+	if (d) strl = (d-nstart);
+	strncpy(o_f,nstart,(strl < 8) ? strl : 8);
+	return strl;
+}
+
 int city_decompress (const uint16_t* in, uint16_t* out, size_t* outsz) { 
 	//reimplementation of a procedure located at 03D15F in the American ROM.
 	//this one handles 0x4000 ~ 0x7FFF and 0xC000 ~ 0xFFFE?

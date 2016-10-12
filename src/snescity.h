@@ -3,6 +3,8 @@
 
 extern char* city_lasterror;
 
+int find_png_filename(const char* filename, char* o_f);
+
 int newcity(const char* sfname, const char* mfname, const char* cityname, int improve, int improve_flags);
 int png2city (const char* sfname, const char* mfname, int citynum, int improve, int improve_flags);
 

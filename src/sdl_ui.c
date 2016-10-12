@@ -160,11 +160,12 @@ int sdl_ui_update(void) {
 
 		case 0: {
 				// main menu
-				
+
 				fillrect(0x140c1c,32,80,192,112);
 
-				int r = sdl_ui_menu(3,(char* []){"Import map into SRAM","Fix SRAM check sum","Exit"});
-				if (r >= 0) { sdl_ui_mode = 1; sdl_ui_operation = r; }
+				int r = sdl_ui_menu(4,(char* []){"New SRAM from map","Load map into SRAM","Fix SRAM check sum","Exit"});
+				if (r == 0) { sdl_ui_mode = 3; sdl_ui_operation = r; }
+				if (r >= 1) { sdl_ui_mode = 1; sdl_ui_operation = r; }
 				if (r == 2) exit(0);
 				break; }
 		case 1: {
@@ -259,11 +260,22 @@ int sdl_ui_update(void) {
 
 				int r = 0;
 				switch (sdl_ui_operation) {
+					case 0: {
 
-					case 0:
-						r = png2city(city_fname,map_fname,citynum,1,0);
-						break;
+							int fs = strlen(map_fname)+5;
+							char newfile[fs];
+							sprintf(newfile,"%s.srm",map_fname);
+							char cityname[9];
+							find_png_filename(map_fname,cityname);
+
+							r = newcity(newfile,map_fname,cityname,1,1);
+							break;
+						}
+
 					case 1:
+						r = png2city(city_fname,map_fname,citynum,1,1);
+						break;
+					case 2:
 						r = fixsram(city_fname);
 						break;
 				}
@@ -271,7 +283,7 @@ int sdl_ui_update(void) {
 				// working...
 				break; }
 		case 5: {
-				
+
 				spr(6,16,64,2,2);
 				for (int ix=2; ix<14; ix++) spr(8,ix*16,64,2,2);
 				spr(10,224,64,2,2);
@@ -287,7 +299,7 @@ int sdl_ui_update(void) {
 				spr(74,224,192,2,2);
 
 				s_addstr_c("success.",112,0);
-				
+
 				s_addstr_c("close the window to exit.",128,0);
 
 				// operation successful
@@ -307,12 +319,12 @@ int sdl_ui_update(void) {
 				spr(70,16,192,2,2);
 				for (int ix=2; ix<14; ix++) spr(72,ix*16,192,2,2);
 				spr(74,224,192,2,2);
-				
+
 				s_addstr_c("error.",112,0);
-				
+
 				s_addstr_c(city_lasterror,136,0);
-				
-				
+
+
 				s_addstr_c("close the window to exit.",160,0);
 
 				// error
@@ -467,7 +479,7 @@ int sdl_ui_main(void) {
 
 				sdl_ui_update();
 				framecnt = nframecnt;
-	
+
 				mousecoords.b_press = 0; mousecoords.b_release = 0;
 			}
 			rerender = 1;
