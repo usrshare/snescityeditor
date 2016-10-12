@@ -419,7 +419,7 @@ int city_improve (uint16_t* city, int improve_flags) {
 				if ((~n & N_W) && (n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x7; //W
 				}
 
-			} else if ((v >= 0x02) && (v <= 0x13)) {
+			} else if ((v >= 0x04) && (v <= 0x13)) {
 
 				int alttile = ( rand() & 1 ) ? 8 : 0; //use alternative tile?
 
@@ -461,7 +461,7 @@ int city_improve (uint16_t* city, int improve_flags) {
 
 				if ((n == N_W) || (n == N_S) || (n == N_N) || (n == N_E)) city[iy*CITYWIDTH+ix] = 0;
 
-				if ((n & N_W) && (n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = 0x1; //water
+				if ((n & N_W) && (n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = 1; //water
 
 				if ((~n & N_W) && (n & N_S) && (~n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x4; //NW
 				if ((n & N_W) && (n & N_S) && (~n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x5; //N

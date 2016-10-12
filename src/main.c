@@ -102,13 +102,16 @@ void exit_usage_error(char** argv) {
 
 		const char* sfname = argv[optind];
 		const char* mfname = argv[optind+1];
+		
+		if ((mfname) && (strlen(cityname) == 0)) {
+			find_png_filename(mfname,cityname);
+			for (int i=0; i < 8; i++) cityname[i] = toupper(cityname[i]);
+		}
 
 		switch(mode) {
 			case MODE_CREATE:
 				if ((!sfname) || (!mfname)) exit_usage_error(argv);
-				find_png_filename(mfname,cityname);
-				for (int i=0; i < 8; i++) cityname[i] = toupper(cityname[i]);
-
+				
 				newcity(sfname,mfname,cityname,improve,improve_flags);
 				break;
 			case MODE_EXPORT:

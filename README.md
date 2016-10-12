@@ -18,23 +18,23 @@ By appending "SDL\_UI=1" to the **make** command, the user may try and compile a
 
 The program runs on a command line and takes arguments in a following format:
 
-    snescityeditor -<eif> [-2] [-x] sramfile.srm mapfile.png
+    snescityeditor -<ceif> [-2] [-x] sramfile.srm mapfile.png
 
 The first argument sets the mode in which the program operates:
+
+* **-c** will import a map from the PNG file and create an SRAM file from scratch based on said map. (WARNING: if an SRAM file under the specified name already exists, it will be overwritten!)
 
 * **-e** will extract a map from the specified SRAM file and save it into the specified PNG file, overwriting it.
 
 * **-i** will import a map from the PNG file and use it to replace the city map in the SRAM file.
 
-* **-c** will import a map from the PNG file and create an SRAM file from scratch based on said map.
-
 * **-f** will update the checksums in an SRAM file to ensure it opens in the game. (The program also does this when using the -i switch. This switch is useful in case the user wants to manually modify the SRAM file.)
 
 Optional switches are as follows:
 
-* **-2** will make the program operate on the second city in the SRAM file. This switch is unnecessary when usingg -f, as it updates all checksums.
+* **-2** will make the program operate on the second city in the SRAM file. This switch is unnecessary when using -f, as it updates all checksums. This switch doesn't work with the -c command due to being unnecessary.
 
-* **-n** allows to specify a city name (max. 8 characters) that will be used when creating a new SRAM file. If not specified, the city will be called "SNESCITY".
+* **-n** allows to specify a city name (max. 8 characters) that will be used when creating a new SRAM file. If not specified, the city name will be based on the PNG map file name.
 
 * **-x** will tell the game that the map needs to be "improved" before being imported into the game. This involves redrawing the roads, bridges, the coastline and the forests to make sure they look smooth. Given that, most of the time, the map is drawn with solid colors, this is practically necessary to achieve a good-looking map.
 
@@ -42,7 +42,7 @@ Optional switches are as follows:
 
   1: draw a coastline from scratch instead of fixing the already existing one.
 
-  2: draw a thicker coastline (if 1 is used). Might result in small islands being shrunken or removed.
+  2: draw a thicker, better-looking coastline (requires 1). Might result in small islands being shrunk or removed.
 
 ## Graphical interface
 
@@ -62,4 +62,4 @@ It only modifies the city map and none of the other variables, so it might cause
 
 # Disclaimer
 
-This program does not generate SRAM files from scratch. These must be obtained manually. The program won't probably cause your computer to melt, but there's no definitive evidence it can't. Use it at your own risk.
+The program probably won't cause your computer to melt, but there's no definitive evidence it can't. Use it at your own risk.
