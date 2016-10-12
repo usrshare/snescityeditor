@@ -36,7 +36,9 @@ Optional switches are as follows:
 
 * **-I** allows to specify binary flags that can change how the improvement process works. To select the flags, add up the numbers listed below:
 
-  1: draw a minimal coastline from scratch instead of fixing the already existing one.
+  1: draw a coastline from scratch instead of fixing the already existing one.
+
+  2: draw a thicker coastline (if 1 is used). Might result in small islands being shrunken or removed.
 
 ## Graphical interface
 
