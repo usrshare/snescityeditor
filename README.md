@@ -26,11 +26,15 @@ The first argument sets the mode in which the program operates:
 
 * **-i** will import a map from the PNG file and use it to replace the city map in the SRAM file.
 
+* **-c** will import a map from the PNG file and create an SRAM file from scratch based on said map.
+
 * **-f** will update the checksums in an SRAM file to ensure it opens in the game. (The program also does this when using the -i switch. This switch is useful in case the user wants to manually modify the SRAM file.)
 
 Optional switches are as follows:
 
 * **-2** will make the program operate on the second city in the SRAM file. This switch is unnecessary when usingg -f, as it updates all checksums.
+
+* **-n** allows to specify a city name (max. 8 characters) that will be used when creating a new SRAM file. If not specified, the city will be called "SNESCITY".
 
 * **-x** will tell the game that the map needs to be "improved" before being imported into the game. This involves redrawing the roads, bridges, the coastline and the forests to make sure they look smooth. Given that, most of the time, the map is drawn with solid colors, this is practically necessary to achieve a good-looking map.
 

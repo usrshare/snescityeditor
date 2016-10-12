@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "snescity.h"
 
@@ -26,13 +27,15 @@ enum prgmode {
 
 
 void exit_usage_error(char** argv) {
-	printf("Usage: %s -<ceif> [-2] [-x #] snescity.srm [citymap.png]\n"
+	printf("Usage: %s -<ceif> [-2] [-x #] [-n cityname] snescity.srm [citymap.png]\n"
 			" -c: create an SRAM file based on PNG map\n"
 			" -e: export map from SRAM into PNG\n"
 			" -i: import map from PNG into SRAM\n"
 			" -f: fix SRAM file's checksum\n"
 			" -2: operate on the second city\n"
+			" -n cityname: specify the name for the newly-created city.\n"
 			" -x: fix shores, forests and roads when importing.\n"
+			" -I #: set additional flags for usage with -x\n"
 			"\n",argv[0]); exit(1);}
 
 	int main (int argc, char** argv) {
@@ -46,10 +49,10 @@ void exit_usage_error(char** argv) {
 		int improve = 0;
 
 		int improve_flags = 0;
-
+		char* cityname = "SNESCITY";
 
 		int c = -1;
-		while ( (c = getopt(argc,argv,"ceiI:f2x")) != -1) {
+		while ( (c = getopt(argc,argv,"ceiI:f2xn:")) != -1) {
 			switch(c) {
 
 				case 'c':
@@ -63,6 +66,10 @@ void exit_usage_error(char** argv) {
 					break;
 				case 'I':
 					improve_flags = atoi(optarg);
+					break;
+				case 'n':
+					strncpy(cityname,optarg,8);
+					for (int i=0; i < 8; i++) cityname[i] = toupper(cityname[i]);
 					break;
 				case 'f':
 					mode = MODE_FIX;
@@ -83,7 +90,8 @@ void exit_usage_error(char** argv) {
 
 		switch(mode) {
 			case MODE_CREATE:
-				fprintf(stderr,"Create mode not implemented yet.\n");
+				if ((!sfname) || (!mfname)) exit_usage_error(argv);
+				newcity(sfname,mfname,cityname,improve,improve_flags);
 				break;
 			case MODE_EXPORT:
 				if ((!sfname) || (!mfname)) exit_usage_error(argv);

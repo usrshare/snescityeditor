@@ -7,7 +7,7 @@
 #include "defines.h"
 #include "pngmap.h"
 
-char* namechars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ,.-";
+char* namechars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ,.- ";
 const size_t cityheader[2] = {0, 0x7FF0};
 const size_t cityoffset[2] = {0x10, 0x4000};
 const char* months[] = {"???","JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"};
@@ -392,20 +392,20 @@ int city_improve (uint16_t* city, int improve_flags) {
 
 				if (improve_flags & 2) {
 				
-				if ((~n & N_W) && (n & N_S) && (~n & N_N) && (~n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x5; //N
-				if ((n & N_W) && (~n & N_S) && (~n & N_N) && (~n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x8; //E
-				if ((~n & N_W) && (~n & N_S) && (~n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x7; //W
-				if ((~n & N_W) && (~n & N_S) && (n & N_N) && (~n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0xA; //S
+				if (n == N_S) city[iy*CITYWIDTH+ix] = alttile + 0x5; //N
+				if (n == N_W) city[iy*CITYWIDTH+ix] = alttile + 0x8; //E
+				if (n == N_E) city[iy*CITYWIDTH+ix] = alttile + 0x7; //W
+				if (n == N_N) city[iy*CITYWIDTH+ix] = alttile + 0xA; //S
 				
-				if ((~n & N_W) && (n & N_S) && (~n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x4; //NW
-				if ((n & N_W) && (n & N_S) && (~n & N_N) && (~n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x6; //NE
-				if ((n & N_W) && (~n & N_S) && (n & N_N) && (~n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0xB; //SE
-				if ((~n & N_W) && (~n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x9; //SW
+				if (n == (N_S | N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x4; //NW
+				if (n == (N_S | N_W)) city[iy*CITYWIDTH+ix] = alttile + 0x6; //NE
+				if (n == (N_N | N_W)) city[iy*CITYWIDTH+ix] = alttile + 0xB; //SE
+				if (n == (N_N | N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x9; //SW
 				
-				if ((n & N_W) && (n & N_S) && (~n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x5; //N
-				if ((n & N_W) && (n & N_S) && (n & N_N) && (~n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x8; //E
-				if ((~n & N_W) && (n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x7; //W
-				if ((n & N_W) && (~n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0xA; //S
+				if (n == (N_W | N_S | N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x5; //N
+				if (n == (N_N | N_S | N_W)) city[iy*CITYWIDTH+ix] = alttile + 0x8; //E
+				if (n == (N_N | N_E | N_S)) city[iy*CITYWIDTH+ix] = alttile + 0x7; //W
+				if (n == (N_N | N_E | N_W)) city[iy*CITYWIDTH+ix] = alttile + 0xa; //S
 				
 				} else {
 
@@ -482,9 +482,9 @@ int city_improve (uint16_t* city, int improve_flags) {
 
 				int n = check_neighbors4(city,iy,ix,0x14,0x25); //forest
 
-				if (n==0) city[iy*CITYWIDTH+ix] = 0;
+				if (n==0) city[iy*CITYWIDTH+ix] = 0x14;
 
-				if ((n == N_W) || (n == N_S) || (n == N_N) || (n == N_E)) city[iy*CITYWIDTH+ix] = 0;
+				if ((n == N_W) || (n == N_S) || (n == N_N) || (n == N_E)) city[iy*CITYWIDTH+ix] = 0x14;
 
 				if ((n & N_W) && (n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x18; //water
 
@@ -633,6 +633,90 @@ int fixsram(const char* sfname) {
 	fclose(cityfile);	
 }
 
+int newcity(const char* sfname, const char* mfname, const char* cityname, int improve, int improve_flags) {
+
+	const int citynum = 0;
+
+	uint16_t citydata[CITYWIDTH * CITYHEIGHT];
+
+	int r = read_png_map(mfname, citydata);	
+	if (r != 0) {
+		fprintf(stderr,"Failed to read the PNG city map.\n");
+		city_lasterror = "Can not read the PNG.\n";
+		return 1;
+	}
+
+	if (improve) city_improve(citydata, improve_flags);
+
+	uint16_t citycomp[(CITYMAPLEN/2)];
+	memset(citycomp,0, CITYMAPLEN);
+
+	size_t citysize = 0;
+
+	r = city_compress(citydata,citycomp,&citysize,CITYMAPLEN);
+	if (r) {
+		fprintf(stderr,"Unable to compress map for SRAM.\n");
+		return 1; }
+
+	//debug
+	FILE* dbgout = fopen("debug_out.bin","wb");
+	if (dbgout) { fwrite(citydata,CITYWIDTH * CITYHEIGHT * 2,1,dbgout); fclose(dbgout); }
+	FILE* dbgout2 = fopen("debug_cmp.bin","wb");
+	if (dbgout2) { fwrite(citycomp,CITYMAPLEN,1,dbgout2); fclose(dbgout2); }
+	//end debug
+
+	uint8_t citysram [0x8000];
+	memset(citysram,0,sizeof citysram);
+	
+	FILE* cityfile = fopen(sfname,"wb");
+	if (!cityfile) { perror("Unable to open city file"); 
+		city_lasterror = "unable to open city file.";
+		return 1; }
+
+	*(uint16_t*)(citysram + cityoffset[citynum] + 0x18) = 20000; //money
+	*(uint8_t*)(citysram + cityoffset[citynum] + 0x1C) = 2; //speed: slow
+	*(uint8_t*)(citysram + cityoffset[citynum] + 0x1E) = 13; //options: auto-bulldoze, auto-goto, no auto-budget, BGM on
+	*(uint16_t*)(citysram + cityoffset[citynum] + 0x20) = 1900; //year
+	*(uint8_t*)(citysram + cityoffset[citynum] + 0x22) = 1; //month
+	*(uint8_t*)(citysram + cityoffset[citynum] + 0x24) = 7; //tax rate
+		
+	*(uint16_t*)(citysram + cityoffset[citynum] + 0x74) = 0x0; //city founded
+	*(uint16_t*)(citysram + cityoffset[citynum] + 0x76) = 1900; //year 1900
+	*(uint16_t*)(citysram + cityoffset[citynum] + 0x78) = 1; //january
+
+	for (int i=1; i < 10; i++) { //history
+		*(uint16_t*)(citysram + cityoffset[citynum] + 0x74 + (6*i)) = 0xFFFF; //no event
+	}
+
+	char convname[8];
+	size_t namelen = (strlen(cityname) < 8) ? strlen(cityname) : 8;
+
+	for (int i=0; i < namelen; i++) {
+		char* x = strchr(namechars,cityname[i]);
+		if (x) convname[i] = (x - namechars); else convname[i] = 0;
+	}
+	
+	*(uint8_t*)(citysram + cityoffset[citynum] + 0x66) = namelen; //city name length
+	memcpy(citysram + cityoffset[citynum] + 0x67, convname, namelen); //city name
+
+	memcpy(citysram + cityoffset[citynum] + 0x70, "\x0E\x0C\x1C", 3); //backwards 'SCE' instead of map number.
+
+	// ---
+
+	memcpy(citysram + cityoffset[citynum] + CITYMAPSTART, citycomp, citysize);
+
+	memset(citysram + cityoffset[citynum] + CITYMAPSTART + citysize, 0, CITYMAPLEN - citysize);
+
+	for (int i=0; i < 2; i++)
+		citysram[cityheader[i] + 5 + citynum] = 1; //1 means city exists
+
+	fixcksum(citysram);
+
+	fwrite(citysram,0x8000,1,cityfile);
+
+	fclose(cityfile);	
+
+}
 
 int png2city (const char* sfname, const char* mfname, int citynum, int improve, int improve_flags) {
 	//This procedurre shall load a city from a PNG map, improve its looks if necessary, then create a savefile with a city based on that map in it.
