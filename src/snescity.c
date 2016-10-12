@@ -693,7 +693,7 @@ int newcity(const char* sfname, const char* mfname, const char* cityname, int im
 
 	for (int i=0; i < namelen; i++) {
 		char* x = strchr(namechars,cityname[i]);
-		if (x) convname[i] = (x - namechars); else convname[i] = 0;
+		if (x) convname[i] = (x - namechars); else convname[i] = 0x27;
 	}
 	
 	*(uint8_t*)(citysram + cityoffset[citynum] + 0x66) = namelen; //city name length
