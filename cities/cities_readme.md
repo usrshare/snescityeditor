@@ -2,9 +2,9 @@ The PNG files in this folder contain city maps based on real terrains. They are 
 
 After that, the map is resized to 120x100 and edited in order to make rivers/water areas contiguous and occasionally moving/resizing islands/peninsulas so that they can fit a 3x3 building.
 
-To import these maps properly, use the following command:
+To use these maps properly, use the following command:
 
-    snescityeditor -ix -I1 sram_file.srm map_file.png
+    snescityeditor -cx -I1 sram_file.srm map_file.png
 
 Notes on specific cities:
 
