@@ -9,6 +9,7 @@
 
 #ifdef USE_SDL_UI
 #include "sdl_ui.h"
+#include "ui_menu.h"
 #endif
 
 #ifndef __CYGWIN__
@@ -55,7 +56,7 @@ void exit_usage_error(char** argv) {
 	int main (int argc, char** argv) {
 
 #ifdef USE_SDL_UI
-		if (argc == 1) return sdl_ui_main();
+		if (argc == 1) return sdl_ui_main(ui_initfunc, ui_updatefunc);
 #endif
 
 		enum prgmode mode = MODE_NONE;
