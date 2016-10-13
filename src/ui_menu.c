@@ -1,6 +1,7 @@
 #include "ui_menu.h"
 #include <limits.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "defines.h"
 #include "snescity.h"
@@ -101,6 +102,7 @@ enum ui_operations {
 	OP_CREATENEW,
 	OP_IMPORT,
 	OP_FIXCKSUM,
+	OP_EXPORT,
 	OP_EXIT
 };
 
@@ -131,7 +133,7 @@ void ui_updatefunc(void) {
 
 					  box(6,16,64,28,18,1);
 
-					  int r = sdl_ui_menu(4,(char* []){"New SRAM from map","Load map into SRAM","Fix SRAM check sum","Exit"},80);
+					  int r = sdl_ui_menu(5,(char* []){"New SRAM from map","Load map into SRAM","Fix SRAM check sum","Export map into PNG","Exit"},80);
 					  if (r == OP_CREATENEW) { sdl_ui_mode = UI_DROPPNG; sdl_ui_operation = r; }
 					  if (r >= OP_IMPORT) { sdl_ui_mode = UI_DROPSRAM; sdl_ui_operation = r; }
 					  if (r == OP_EXIT) exit(0);
@@ -161,7 +163,7 @@ void ui_updatefunc(void) {
 					 if (r != 0) sdl_ui_mode = UI_ERROR;
 
 					 r = sdl_ui_menu(3,(char* []){city1,city2,"Back"},80);
-					 if (r >= 0) { citynum = r; sdl_ui_mode = UI_DROPPNG; }
+					 if (r >= 0) { citynum = r; sdl_ui_mode = (sdl_ui_operation == OP_EXPORT ? UI_PROCESSING : UI_DROPPNG); }
 					 if (r == 2) sdl_ui_mode = UI_MAINMENU;
 					 // select city 1 or 2
 					 break; }
@@ -257,6 +259,10 @@ void ui_updatefunc(void) {
 						    case OP_IMPORT: r = replace_city(city_fname,citytiles,citynum);
 								    break;
 						    case OP_FIXCKSUM: r = fixsram(city_fname);
+								      break;
+					 		case OP_EXPORT: strcpy(newfile,city_fname);
+								      strcat(newfile,".png");
+					 				city2png(city_fname,newfile,citynum);
 								      break;
 					    }
 					    sdl_ui_mode = r ? UI_ERROR : UI_SUCCESS;

@@ -468,7 +468,7 @@ int city_improve (uint16_t* city, int improve_flags) {
 
 			uint16_t v = city[iy*CITYWIDTH+ix];
 
-			if ( ((improve_flags & 3) == 3) && ((v >= 0x02) && (v <= 0x13)) ) {
+			if ( ((improve_flags & 3) == 3) && ((v >= 0x04) && (v <= 0x13)) ) {
 
 				int alttile = ( rand() & 1 ) ? 8 : 0; //use alternative tile?
 
@@ -617,7 +617,7 @@ int describe_cities (const char* sfname, char* city1, char* city2) {
 
 			memcpy(&year, citysram + cityoffset[ci] + 0x20, 2);
 
-			snprintf(ci ? city2 : city1, 17, "%d. %4d %8s",ci+1,year,name);
+			snprintf(ci ? city2 : city1, 17, "%d. %4d %-8s",ci+1,year,name);
 		} else {
 
 			snprintf(ci ? city2 : city1, 17, "%d. ---- --------",ci+1);
