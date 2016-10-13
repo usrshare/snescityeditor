@@ -29,6 +29,11 @@ struct mousecoord {
 	uint8_t buttons;
 	uint8_t b_press;
 	uint8_t b_release;
+	uint8_t press_x;
+	uint8_t press_y;
+	uint8_t release_x;
+	uint8_t release_y;
+
 };
 
 struct mousecoord mousecoords;
@@ -40,6 +45,31 @@ char dropfilename[PATH_MAX];
 
 int menu_cnt = -1;
 int menu_foc = -1;
+
+int hold(uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
+
+	if ( (mousecoords.press_x >= x) && (mousecoords.press_x < (x+w)) &&
+	(mousecoords.press_y >= y) && (mousecoords.press_y < (y+h)) &&
+	(mousecoords.buttons > 0) ) {
+
+		return 1;
+	}
+	return 0;
+}
+
+int click(uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
+
+	if ( (mousecoords.press_x >= x) && (mousecoords.press_x < (x+w)) &&
+	(mousecoords.press_y >= y) && (mousecoords.press_y < (y+h)) &&
+	(mousecoords.release_x >= x) && (mousecoords.release_x < (x+w)) &&
+	(mousecoords.release_y >= y) && (mousecoords.release_y < (y+h)) ) {
+
+		mousecoords.press_x = 255; mousecoords.press_y = 255;
+		mousecoords.release_x = 255; mousecoords.release_y = 255;
+		return 1;
+	}
+	return 0;
+}
 
 int getdrop(char* filename, size_t fnlen) {
 
@@ -73,6 +103,10 @@ int fillrect(uint32_t color, uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
 
 	SDL_Rect sr = {.x = x, .y = y, .w = w, .h = h};
 	return SDL_FillRect(scs,&sr,color);
+}
+
+int pset(uint32_t color, uint8_t x, uint8_t y) {
+	return fillrect(color,x,y,1,1);
 }
 
 int spr(uint8_t spr, uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
@@ -111,34 +145,38 @@ int s_addstr(const char* text, uint8_t x, uint8_t y, uint8_t font) {
 	return 0;
 }
 
+int s_addstr_cx(const char* text, uint8_t x, uint8_t y, uint8_t font) {
+	return s_addstr(text, x - (strlen(text)*4), y, font);
+}
+
 int s_addstr_c(const char* text, uint8_t y, uint8_t font) {
 	return s_addstr(text, 128 - (strlen(text)*4), y, font);
 }
 
-int sdl_ui_menu(int choice_c, char** choice_v) {
+int sdl_ui_menu(int choice_c, char** choice_v, int sy) {
 
 	menu_cnt = choice_c;
 
 	for (int i=0; i < choice_c; i++) {
-		s_addstr(choice_v[i],48,80+(16*i),0);
+		s_addstr(choice_v[i],48,sy+(16*i),0);
 	}
 
 	struct mousecoord m = get_mouse();
-	if ((m.x >= 32) && (m.x < 224) && (m.y >= 80) && (m.y < (80 + (16*choice_c))) ) menu_foc = ((m.y - 80) / 16); else menu_foc = -1;
+	if ((m.x >= 32) && (m.x < 224) && (m.y >= 80) && (m.y < (sy + (16*choice_c))) ) menu_foc = ((m.y - sy) / 16); else menu_foc = -1;
 
 	for (int i=0; i < choice_c; i++) {
 
 		if (menu_foc == i) {
-			s_addstr(">",32,80+(16*i),0);
+			s_addstr(">",32,sy+(16*i),0);
 		} else {
-			spr(40,32,80+(16*i),1,2);
+			spr(23,32,sy+(16*i),1,1);
+			spr(23,32,sy+(16*i)+8,1,1);
 		}
 
 	}
 
 	if ((m.b_release) && (menu_foc >= 0)) return menu_foc; else return -1;
 }
-
 
 int sdl_ui_main(cb_noparam mainfunc, cb_noparam updatefunc) {
 
@@ -199,10 +237,16 @@ int sdl_ui_main(cb_noparam mainfunc, cb_noparam updatefunc) {
 
 					if (lastevent.button.state == SDL_PRESSED) {
 						mousecoords.buttons |= (1 << (lastevent.button.button));
-						mousecoords.b_press = lastevent.button.button; }
+						mousecoords.b_press = lastevent.button.button; 
+						mousecoords.press_x = mousecoords.x;
+						mousecoords.press_y = mousecoords.y;
+					}
 					else {
 						mousecoords.buttons &= ~ (1 << (lastevent.button.button));
-						mousecoords.b_release = lastevent.button.button; }
+						mousecoords.b_release = lastevent.button.button; 
+						mousecoords.release_x = mousecoords.x;
+						mousecoords.release_y = mousecoords.y;
+					}
 					break;
 				case SDL_WINDOWEVENT:
 					if (lastevent.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {rerender = 1; break; }
@@ -248,7 +292,7 @@ int sdl_ui_main(cb_noparam mainfunc, cb_noparam updatefunc) {
 
 				updatefunc();
 				framecnt = nframecnt;
-	
+
 				mousecoords.b_press = 0; mousecoords.b_release = 0;
 			}
 			rerender = 1;

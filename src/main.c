@@ -26,20 +26,6 @@ enum prgmode {
 	MODE_CREATE, //create new SRAM file from PNG map
 };
 
-int find_png_filename(const char* filename, char* o_f) {
-
-	const char* nstart = filename;
-	
-	char* x = strrchr(filename,'/');
-	if (x) nstart = x+1;
-
-	size_t strl = strlen(nstart);
-	char* d = strrchr(filename,'.');
-
-	if (d) strl = (d-nstart);
-	strncpy(o_f,nstart,(strl < 8) ? strl : 8);
-	return strl;
-}
 
 void exit_usage_error(char** argv) {
 	printf("Usage: %s -<ceif> [-2] [-x #] [-n cityname] snescity.srm [citymap.png]\n"
