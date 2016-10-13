@@ -46,11 +46,11 @@ Optional switches are as follows:
 
 ## Graphical interface
 
-When compiled with "SDL\_UI=1", the program opens with a menu providing different operations. This menu doesn't provide the entire functionality of the command line version, and its output is very limited (it doesn't tell different errors apart or prevent a user from making bad decisions), but it should work for the most basic needs.
+When compiled with "SDL\_UI=1", the program opens with a menu providing different operations. This menu is still a work in progress, and there might be bugs, but it should work for the most basic needs.
 
-You can select different options by clicking on them. After selecting an option, the program will ask for the SRAM and PNG files to be dropped into its window. The program may also ask which one of the two cities in the SRAM file should be loaded. Be warned that it doesn't prevent the user from choosing an empty city - the program will still report success, but the imported city won't load anyway.
+You can select different options by clicking on them. After selecting an option, the program will ask for the SRAM and PNG files to be dropped into its window. The program may also ask which one of the two cities in the SRAM file should be loaded or to apply one of the few improvements/modifications to the map file. Be warned that it doesn't prevent the user from choosing an empty city - the program will still report success, but the imported city won't load anyway.
 
-After all the parameters are specified, the program will either report "success" or "error". The only way from either of those screens is by closing the program window.
+After all the parameters are specified, the program will either report "success" or "error".
 
 # Bugs
 
