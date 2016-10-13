@@ -147,7 +147,7 @@ void ui_updatefunc(void) {
 					  if (getdrop(city_fname,PATH_MAX))
 						  sdl_ui_mode = (sdl_ui_operation == OP_FIXCKSUM ? UI_PROCESSING : UI_SELCITY);
 
-					  if (button(58,"BACK",176,192,7)) sdl_ui_mode = UI_MAINMENU;
+					  if (button(58,"BACK",176,184,7)) sdl_ui_mode = UI_MAINMENU;
 
 					  break; }
 		case UI_SELCITY: {
@@ -179,7 +179,7 @@ void ui_updatefunc(void) {
 						 import_mode = 0;
 					 }
 
-					 if (button(58,"BACK",176,192,7)) sdl_ui_mode = UI_MAINMENU;
+					 if (button(58,"BACK",176,184,7)) sdl_ui_mode = UI_MAINMENU;
 
 					 break; }
 		case UI_OPTIONS: {
@@ -236,11 +236,11 @@ void ui_updatefunc(void) {
 						 reload_city = 1;
 					 }
 
-					 if (button(58,"START",176,176,7)) {
+					 if (button(58,"START",176,156,7)) {
 						 sdl_ui_mode = UI_PROCESSING;
 					 }
 
-					 if (button(58,"BACK",176,192,7)) sdl_ui_mode = UI_MAINMENU;
+					 if (button(58,"BACK",176,184,7)) sdl_ui_mode = UI_MAINMENU;
 
 					 break; }
 		case UI_PROCESSING: {
@@ -268,6 +268,7 @@ void ui_updatefunc(void) {
 
 					 s_addstr_c("close the window to exit.",128,0);
 
+					 if (button(58,"BACK",176,184,7)) sdl_ui_mode = UI_MAINMENU;
 					 // operation successful
 					 break; }
 		case UI_ERROR: {
@@ -281,6 +282,7 @@ void ui_updatefunc(void) {
 
 				       s_addstr_c("close the window to exit.",160,0);
 
+					 if (button(58,"BACK",176,184,7)) sdl_ui_mode = UI_MAINMENU;
 				       // error
 				       break; }
 	}
