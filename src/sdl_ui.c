@@ -50,6 +50,8 @@ int hold(uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
 
 	if ( (mousecoords.press_x >= x) && (mousecoords.press_x < (x+w)) &&
 	(mousecoords.press_y >= y) && (mousecoords.press_y < (y+h)) &&
+	(mousecoords.x >= x) && (mousecoords.x < (x+w)) &&
+	(mousecoords.y >= y) && (mousecoords.y < (y+h)) &&
 	(mousecoords.buttons > 0) ) {
 
 		return 1;
