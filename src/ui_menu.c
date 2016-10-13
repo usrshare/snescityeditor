@@ -206,6 +206,8 @@ void ui_updatefunc(void) {
 					 strcpy(newfile,map_fname);
 					 strcat(newfile,".srm");
 					 find_png_filename(map_fname,cityname);
+			
+					 for (int i=0; i < 8; i++) cityname[i] = toupper(cityname[i]);
 
 					 uint32_t c = 0xFF0000;
 
