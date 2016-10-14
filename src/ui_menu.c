@@ -95,6 +95,7 @@ enum import_modes {
 	I_NOCOAST,
 	I_SIMPLECOAST,
 	I_THICKCOAST,
+	I_TESTING,
 	I_COUNT
 };
 
@@ -198,6 +199,9 @@ void ui_updatefunc(void) {
 							 case I_THICKCOAST:
 								 city_improve(citytiles,3);
 								 break;
+							 case I_TESTING:
+								 city_improve(citytiles,5);
+								 break;
 						 }
 						 reload_city = 0;
 					 }
@@ -231,7 +235,7 @@ void ui_updatefunc(void) {
 					 box(58,176,96,7,2,1);
 
 					 const char* import_desc[] = {
-						 "NONE","SIMPLE","COAST 1","COAST 2"
+						 "NONE","SIMPLE","COAST1","COAST2","EXTRA"
 					 };
 
 					 if (button(58,import_desc[import_mode],176,96,7)) {

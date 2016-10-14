@@ -43,6 +43,8 @@ Optional switches are as follows:
   1: draw a coastline from scratch instead of fixing the already existing one.
 
   2: draw a thicker, better-looking coastline (requires 1). Might result in small islands being shrunk or removed.
+  
+  4: (experimental algorithm) try to draw a thick coastline w/o overwriting sea tiles (requires 1). Maps imported this way may need manual editing.
 
 ## Graphical interface
 
