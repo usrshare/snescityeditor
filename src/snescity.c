@@ -319,12 +319,6 @@ int city2png (const char* sfname, const char* mfname, int citynum) {
 	city_decompress2((const uint16_t*)citytemp,(uint16_t*)citytemp2,&citysize);
 	city_decompress3((const uint16_t*)citytemp2,(uint16_t*)citydata,&citysize);
 
-	FILE* dbgfile = fopen("debug.bin","wb");
-
-	fwrite(citydata,citysize,1,dbgfile);
-
-	fclose(dbgfile);
-
 	write_png_map(mfname,citydata);
 
 	fclose(cityfile);
@@ -662,13 +656,6 @@ int replace_city(const char* sfname, const uint16_t* citydata, int citynum) {
 	if (r) {
 		fprintf(stderr,"Unable to compress map for SRAM.\n");
 		return 1; }
-
-	//debug
-	FILE* dbgout = fopen("debug_out.bin","wb");
-	if (dbgout) { fwrite(citydata,CITYWIDTH * CITYHEIGHT * 2,1,dbgout); fclose(dbgout); }
-	FILE* dbgout2 = fopen("debug_cmp.bin","wb");
-	if (dbgout2) { fwrite(citycomp,CITYMAPLEN,1,dbgout2); fclose(dbgout2); }
-	//end debug
 
 	uint8_t citysram [0x8000];
 	memset(citysram,0,sizeof citysram);
