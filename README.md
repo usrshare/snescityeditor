@@ -46,6 +46,8 @@ Optional switches are as follows:
   
   4: (experimental algorithm) try to draw a thick coastline w/o overwriting sea tiles (requires 1). Maps imported this way may need manual editing.
 
+  8: when drawing a thick coastline, check if the shore tiles fit each other. When using flags 1 and 2, results in less island shrinkage, but weirder looking maps.
+
 ## Graphical interface
 
 When compiled with "SDL\_UI=1", the program opens with a menu providing different operations. This menu is still a work in progress, and there might be bugs, but it should work for the most basic needs.

@@ -14,12 +14,11 @@ SDL_Surface* tsurf = 0; //texture surface (128x256)
 SDL_Surface* scs = 0; //screen surface (256x224)
 SDL_Texture* tex = 0; //screen texture (256x224)
 
-unsigned int win_w = 640;
-unsigned int win_h = 480;
-
 uint32_t ticks = 0;
 uint32_t framecnt = 0;
 
+unsigned int win_w = 640;
+unsigned int win_h = 480;
 SDL_Rect viewport = {.x = 0, .y = 0, .w = 640, .h = 480};
 
 struct mousecoord {

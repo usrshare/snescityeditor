@@ -369,6 +369,29 @@ int check_neighbors(uint16_t* citydata, int y, int x, uint16_t tile_min, uint16_
 	return r;
 }
 
+int valid_neighbors(uint16_t tile) {
+	switch (tile) {
+
+		case 4:
+		case 12: return 255 & ~N_NW;
+		case 5:
+		case 13: return 255 & ~N_N;
+		case 6:
+		case 14: return 255 & ~N_NE;
+		case 7: 
+		case 15: return 255 & ~N_W;
+		case 8:
+		case 16: return 255 & ~N_E;
+		case 9:
+		case 17: return 255 & ~N_SW;
+		case 10:
+		case 18: return 255 & ~N_S;
+		case 11:
+		case 19: return 255 & ~N_SE;
+		default: return 255;
+	}
+}
+
 uint16_t improve4(int n) {
 
 	switch(n) {
@@ -534,6 +557,7 @@ int city_improve (uint16_t* city, int improve_flags) {
 
 				int n = check_neighbors4(city,iy,ix,1,0x13); //water
 				n |= check_neighbors4(city,iy,ix,0x30,0x31); //bridge
+				if (improve_flags & 8) n &= valid_neighbors(v);
 
 				if (n==0) city[iy*CITYWIDTH+ix] = 0;
 
