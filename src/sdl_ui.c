@@ -21,19 +21,6 @@ unsigned int win_w = 640;
 unsigned int win_h = 480;
 SDL_Rect viewport = {.x = 0, .y = 0, .w = 640, .h = 480};
 
-struct mousecoord {
-	uint8_t valid;
-	uint8_t x;
-	uint8_t y;
-	uint8_t buttons;
-	uint8_t b_press;
-	uint8_t b_release;
-	uint8_t press_x;
-	uint8_t press_y;
-	uint8_t release_x;
-	uint8_t release_y;
-
-};
 
 struct mousecoord mousecoords;
 
@@ -45,25 +32,26 @@ char dropfilename[PATH_MAX];
 int menu_cnt = -1;
 int menu_foc = -1;
 
-int hold(uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
+int hold(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t bmask) {
 
 	if ( (mousecoords.press_x >= x) && (mousecoords.press_x < (x+w)) &&
 	(mousecoords.press_y >= y) && (mousecoords.press_y < (y+h)) &&
 	(mousecoords.x >= x) && (mousecoords.x < (x+w)) &&
 	(mousecoords.y >= y) && (mousecoords.y < (y+h)) &&
-	(mousecoords.buttons > 0) ) {
+	(mousecoords.buttons & bmask)) {
 
 		return 1;
 	}
 	return 0;
 }
 
-int click(uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
+int click(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t bmask) {
 
 	if ( (mousecoords.press_x >= x) && (mousecoords.press_x < (x+w)) &&
 	(mousecoords.press_y >= y) && (mousecoords.press_y < (y+h)) &&
 	(mousecoords.release_x >= x) && (mousecoords.release_x < (x+w)) &&
-	(mousecoords.release_y >= y) && (mousecoords.release_y < (y+h)) ) {
+	(mousecoords.release_y >= y) && (mousecoords.release_y < (y+h)) && 
+	(mousecoords.b_release & bmask) ) {
 
 		mousecoords.press_x = 255; mousecoords.press_y = 255;
 		mousecoords.release_x = 255; mousecoords.release_y = 255;
@@ -110,7 +98,7 @@ int pset(uint32_t color, uint8_t x, uint8_t y) {
 	return fillrect(color,x,y,1,1);
 }
 
-int spr(uint8_t spr, uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
+int spr(uint8_t spr, int16_t x, int16_t y, uint8_t w, uint8_t h) {
 
 	SDL_Rect sr = {.x = (spr % 16)*8, .y = (spr / 16)*8, .w = w*8, .h = h*8};
 	SDL_Rect dr = {.x = x, .y = y, .w = w*8, .h = h*8};
@@ -237,14 +225,14 @@ int sdl_ui_main(cb_noparam mainfunc, cb_noparam updatefunc) {
 				case SDL_MOUSEBUTTONUP:
 
 					if (lastevent.button.state == SDL_PRESSED) {
-						mousecoords.buttons |= (1 << (lastevent.button.button));
-						mousecoords.b_press = lastevent.button.button; 
+						mousecoords.buttons |= SDL_BUTTON(lastevent.button.button);
+						mousecoords.b_press |= SDL_BUTTON(lastevent.button.button); 
 						mousecoords.press_x = mousecoords.x;
 						mousecoords.press_y = mousecoords.y;
 					}
 					else {
-						mousecoords.buttons &= ~ (1 << (lastevent.button.button));
-						mousecoords.b_release = lastevent.button.button; 
+						mousecoords.buttons &= ~ SDL_BUTTON(lastevent.button.button);
+						mousecoords.b_release |= SDL_BUTTON(lastevent.button.button); 
 						mousecoords.release_x = mousecoords.x;
 						mousecoords.release_y = mousecoords.y;
 					}

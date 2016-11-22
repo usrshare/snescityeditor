@@ -21,6 +21,12 @@ int citynum = 0;
 int reload_city = 0;
 uint16_t citytiles[CITYWIDTH*CITYHEIGHT];
 
+int16_t edit_scrollx = -1;
+int16_t edit_scrolly = -1;
+
+int16_t holddiff_x = 0, holddiff_y = 0;
+int16_t scrdiff_x = 0, scrdiff_y = 0;
+
 void fillspr(uint8_t s, uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
 
 	for (int iy=0; iy < h; iy++)
@@ -56,6 +62,8 @@ void box(uint8_t s, uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t sz) {
 
 void ui_initfunc(void) {
 
+	memset(citytiles,0,sizeof citytiles);
+
 	//background
 
 	for (int iy=0; iy < 14; iy++) {
@@ -66,17 +74,7 @@ void ui_initfunc(void) {
 
 	// title
 
-	spr(0,16,16,2,2);
-	for (int ix=2; ix<14; ix++) spr(2,ix*16,16,2,2);
-	spr(4,224,16,2,2);
-
-	spr(32,16,32,2,2);
-	for (int ix=2; ix<14; ix++) spr(34,ix*16,32,2,2);
-	spr(36,224,32,2,2);
-
-	spr(64,16,48,2,2);
-	for (int ix=2; ix<14; ix++) spr(66,ix*16,48,2,2);
-	spr(68,224,48,2,2);
+	for (int iy=0; iy < 14; iy++) for (int ix=0; ix<16; ix++) spr(4,ix*16,iy*16,2,2);
 
 	s_addstr_c("SNESCITYEDITOR",32,0);
 
@@ -123,22 +121,104 @@ int button(uint8_t spr, const char* text, uint8_t x, uint8_t y, uint8_t w) {
 	box(spr,x,y,w,2,1);
 	s_addstr_cx(text,x + (4*w),y+4,1);
 
-	if (hold(x,y,w*8,16)) box(61,x,y,w,2,1);
+	if (hold(x,y,w*8,16,1)) box(61,x,y,w,2,1);
 
-	if (click(x,y,w*8,16)) return 1; else return 0;
+	if (click(x,y,w*8,16,1)) return 1; else return 0;
 }
 
 int editbutton(uint8_t s, uint8_t x, uint8_t y) {
 
-	if (hold(x,y,16,16)) {
+	if (hold(x,y,16,16,1)) {
 		spr(171,x,y,2,2);
-		spr(s,x+4,y+2,1,1);
+		spr(s,x+4,y+4,1,1);
 	} else {
 		spr(169,x,y,2,2);
-		spr(s,x+4,y+4,1,1);
+		spr(s,x+4,y+2,1,1);
 	}
 	
-	if (click(x,y,16,16)) return 1; else return 0;
+	if (click(x,y,16,16,1)) return 1; else return 0;
+}
+
+uint8_t citysprite(uint16_t tile) {
+
+	switch(tile) {
+		case 0x00: return 9;
+		case 0x01:
+		case 0x02: return 72; //water
+		case 0x03: return 57; //water with path for ships
+			   //shores
+		case 0x0c:
+		case 0x04: return 54;
+		case 0x0d:
+		case 0x05: return 55;
+		case 0x0e:
+		case 0x06: return 56;
+		case 0x0f:
+		case 0x07: return 54+16;
+		case 0x10:
+		case 0x08: return 56+16;
+		case 0x11:
+		case 0x09: return 54+32;
+		case 0x12:
+		case 0x0a: return 55+32;
+		case 0x13:
+		case 0x0b: return 56+32;
+		
+		case 0x14:
+		case 0x1d: return 0xad;
+		case 0x15:
+		case 0x1e: return 0xae;
+		case 0x16:
+		case 0x1f: return 0xaf;
+		case 0x17:
+		case 0x20: return 0xbd;
+		case 0x18:
+		case 0x21: return 0xbe;
+		case 0x19:
+		case 0x22: return 0xbf;
+		case 0x1a:
+		case 0x23: return 0xcd;
+		case 0x1b:
+		case 0x24: return 0xce;
+		case 0x1c:
+		case 0x25: return 0xcf;
+
+		case 0x32: return 0xc0;
+		case 0x33: return 0xc1;
+		case 0x34: return 0xc2;
+		case 0x35: return 0xc3;
+		case 0x36: return 0xc4;
+		case 0x37: return 0xc5;
+		case 0x38: return 0xc6;
+		case 0x39: return 0xc7;
+		case 0x3a: return 0xc8;
+		case 0x3b: return 0xc9;
+		case 0x3c: return 0xca;
+
+		default: return 253; //weird tile
+	}
+}
+
+void drawcity(int16_t sx, int16_t sy) {
+
+
+	int minx = sx/8 - 2;
+	int miny = sy/8 - 2;
+	
+	int maxx = sx/8 + 33;
+	int maxy = sy/8 + 27;
+
+	for (int iy = miny; iy < maxy; iy++) {
+		for (int ix = minx; ix < maxx; ix++) {
+
+		if ((iy >= 0) && (iy < CITYHEIGHT) && (ix >= 0) && (ix < CITYWIDTH)) {
+			uint8_t cspr = citysprite(citytiles[iy * CITYWIDTH + ix]);
+			spr(cspr, (ix*8) - sx, 16+(iy*8) - sy,1,1);
+		} else spr(254, (ix*8) - sx, 16+(iy*8) - sy,1,1); //out of bounds
+
+		}
+	}
+
 }
 
 void ui_updatefunc(void) {
@@ -210,13 +290,29 @@ void ui_updatefunc(void) {
 					 break; }
 		case UI_EDITOR: {
 					
+					 drawcity(edit_scrollx,edit_scrolly);
+					 
 					 fillspr(25,0,0,32,1);
 					 fillspr(41,0,8,32,1);
 
-					 editbutton(201,0,0);
-					 editbutton(202,16,0);
-					 editbutton(203,32,0);
-					 editbutton(204,48,0);
+					 editbutton(249,0,0);
+					 editbutton(250,16,0);
+					 editbutton(251,32,0);
+					 editbutton(252,48,0);
+
+					 if (hold(0,16,255,208,4)) {
+						 holddiff_x = (mousecoords.x - mousecoords.press_x);
+						 holddiff_y = (mousecoords.y - mousecoords.press_y);
+
+						 if ((holddiff_x - scrdiff_x) != 0 ) { edit_scrollx -= (holddiff_x - scrdiff_x); scrdiff_x = holddiff_x; }
+						 if ((holddiff_y - scrdiff_y) != 0 ) { edit_scrolly -= (holddiff_y - scrdiff_y); scrdiff_y = holddiff_y; }
+
+						 if (edit_scrollx < -64) edit_scrollx = -64; if (edit_scrollx > 96*8) edit_scrollx = 96*8;
+						 if (edit_scrolly < -64) edit_scrolly = -64; if (edit_scrolly > 82*8) edit_scrolly = 82*8;
+
+					 } else {
+						 scrdiff_x = 0; scrdiff_y = 0;
+					 }
 
 					 break; }
 		case UI_OPTIONS: {
