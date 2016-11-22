@@ -21,6 +21,13 @@ int citynum = 0;
 int reload_city = 0;
 uint16_t citytiles[CITYWIDTH*CITYHEIGHT];
 
+void fillspr(uint8_t s, uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
+
+	for (int iy=0; iy < h; iy++)
+		for (int ix=0; ix < w; ix++)
+			spr(s,x+(ix*8),y+(iy*8),1,1);
+}
+
 void box(uint8_t s, uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t sz) {
 
 	spr(s,x,y,sz,sz);
@@ -85,6 +92,7 @@ enum ui_modes {
 	UI_SELCITY,
 	UI_DROPPNG,
 	UI_OPTIONS,
+	UI_EDITOR,
 	UI_PROCESSING,
 	UI_SUCCESS,
 	UI_ERROR
@@ -104,6 +112,7 @@ enum ui_operations {
 	OP_IMPORT,
 	OP_FIXCKSUM,
 	OP_EXPORT,
+	OP_EDITOR,
 	OP_EXIT
 };
 
@@ -117,6 +126,19 @@ int button(uint8_t spr, const char* text, uint8_t x, uint8_t y, uint8_t w) {
 	if (hold(x,y,w*8,16)) box(61,x,y,w,2,1);
 
 	if (click(x,y,w*8,16)) return 1; else return 0;
+}
+
+int editbutton(uint8_t s, uint8_t x, uint8_t y) {
+
+	if (hold(x,y,16,16)) {
+		spr(171,x,y,2,2);
+		spr(s,x+4,y+2,1,1);
+	} else {
+		spr(169,x,y,2,2);
+		spr(s,x+4,y+4,1,1);
+	}
+	
+	if (click(x,y,16,16)) return 1; else return 0;
 }
 
 void ui_updatefunc(void) {
@@ -134,9 +156,10 @@ void ui_updatefunc(void) {
 
 					  box(6,16,64,28,18,1);
 
-					  int r = sdl_ui_menu(5,(char* []){"New SRAM from map","Load map into SRAM","Fix SRAM check sum","Export map into PNG","Exit"},80);
+					  int r = sdl_ui_menu(6,(char* []){"New SRAM from map","Load map into SRAM","Fix SRAM check sum","Export map into PNG","Draw new map","Exit"},80);
 					  if (r == OP_CREATENEW) { sdl_ui_mode = UI_DROPPNG; sdl_ui_operation = r; }
-					  if (r >= OP_IMPORT) { sdl_ui_mode = UI_DROPSRAM; sdl_ui_operation = r; }
+					  if (r == OP_EDITOR) { sdl_ui_mode = UI_EDITOR; }
+					  if ((r == OP_IMPORT) || (r == OP_FIXCKSUM) || (r == OP_EXPORT)) { sdl_ui_mode = UI_DROPSRAM; sdl_ui_operation = r; }
 					  if (r == OP_EXIT) exit(0);
 					  break; }
 		case UI_DROPSRAM: {
@@ -183,6 +206,17 @@ void ui_updatefunc(void) {
 					 }
 
 					 if (button(58,"BACK",176,184,7)) sdl_ui_mode = UI_MAINMENU;
+
+					 break; }
+		case UI_EDITOR: {
+					
+					 fillspr(25,0,0,32,1);
+					 fillspr(41,0,8,32,1);
+
+					 editbutton(201,0,0);
+					 editbutton(202,16,0);
+					 editbutton(203,32,0);
+					 editbutton(204,48,0);
 
 					 break; }
 		case UI_OPTIONS: {

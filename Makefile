@@ -1,3 +1,5 @@
+-include Makefile.cfg
+
 OBJDIR=obj
 SRCDIR=src
 
