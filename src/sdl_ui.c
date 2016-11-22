@@ -136,7 +136,7 @@ int s_addstr(const char* text, uint8_t x, uint8_t y, uint8_t font) {
 
 			if (tchar) {
 				int ci = (tchar - sprchars);
-				uint8_t si = 96 + (ci / 16)*(font ? 16 : 32) + (ci % 16) + (font ? 96 : 0);
+				uint8_t si = (font ? 208 : 96) + (ci / 16)*(font ? 16 : 32) + (ci % 16);
 				spr(si,cx,cy,1,font ? 1 : 2);
 			}
 			cx += 8;
