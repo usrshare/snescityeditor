@@ -135,7 +135,7 @@ int editbutton(uint8_t s, uint8_t x, uint8_t y) {
 		spr(169,x,y,2,2);
 		spr(s,x+4,y+2,1,1);
 	}
-	
+
 	if (click(x,y,16,16,1)) return 1; else return 0;
 }
 
@@ -163,7 +163,7 @@ uint8_t citysprite(uint16_t tile) {
 		case 0x0a: return 55+32;
 		case 0x13:
 		case 0x0b: return 56+32;
-		
+
 		case 0x14:
 		case 0x1d: return 0xad;
 		case 0x15:
@@ -204,17 +204,17 @@ void drawcity(int16_t sx, int16_t sy) {
 
 	int minx = sx/8 - 2;
 	int miny = sy/8 - 2;
-	
+
 	int maxx = sx/8 + 33;
 	int maxy = sy/8 + 27;
 
 	for (int iy = miny; iy < maxy; iy++) {
 		for (int ix = minx; ix < maxx; ix++) {
 
-		if ((iy >= 0) && (iy < CITYHEIGHT) && (ix >= 0) && (ix < CITYWIDTH)) {
-			uint8_t cspr = citysprite(citytiles[iy * CITYWIDTH + ix]);
-			spr(cspr, (ix*8) - sx, 16+(iy*8) - sy,1,1);
-		} else spr(254, (ix*8) - sx, 16+(iy*8) - sy,1,1); //out of bounds
+			if ((iy >= 0) && (iy < CITYHEIGHT) && (ix >= 0) && (ix < CITYWIDTH)) {
+				uint8_t cspr = citysprite(citytiles[iy * CITYWIDTH + ix]);
+				spr(cspr, (ix*8) - sx, 16+(iy*8) - sy,1,1);
+			} else spr(254, (ix*8) - sx, 16+(iy*8) - sy,1,1); //out of bounds
 
 		}
 	}
@@ -236,7 +236,7 @@ void ui_updatefunc(void) {
 
 					  box(6,16,64,28,18,1);
 
-					  int r = sdl_ui_menu(6,(char* []){"New SRAM from map","Load map into SRAM","Fix SRAM check sum","Export map into PNG","Draw new map","Exit"},80);
+					  int r = sdl_ui_menu(6,(char* []){"New SRAM from map","Load map into SRAM","Fix SRAM check sum","Export map into PNG","TODO - Draw new map","Exit"},80);
 					  if (r == OP_CREATENEW) { sdl_ui_mode = UI_DROPPNG; sdl_ui_operation = r; }
 					  if (r == OP_EDITOR) { sdl_ui_mode = UI_EDITOR; }
 					  if ((r == OP_IMPORT) || (r == OP_FIXCKSUM) || (r == OP_EXPORT)) { sdl_ui_mode = UI_DROPSRAM; sdl_ui_operation = r; }
@@ -289,32 +289,46 @@ void ui_updatefunc(void) {
 
 					 break; }
 		case UI_EDITOR: {
-					
-					 drawcity(edit_scrollx,edit_scrolly);
-					 
-					 fillspr(25,0,0,32,1);
-					 fillspr(41,0,8,32,1);
 
-					 editbutton(249,0,0);
-					 editbutton(250,16,0);
-					 editbutton(251,32,0);
-					 editbutton(252,48,0);
+					drawcity(edit_scrollx,edit_scrolly);
 
-					 if (hold(0,16,255,208,4)) {
-						 holddiff_x = (mousecoords.x - mousecoords.press_x);
-						 holddiff_y = (mousecoords.y - mousecoords.press_y);
+					fillspr(25,0,0,32,1);
+					fillspr(41,0,8,32,1);
 
-						 if ((holddiff_x - scrdiff_x) != 0 ) { edit_scrollx -= (holddiff_x - scrdiff_x); scrdiff_x = holddiff_x; }
-						 if ((holddiff_y - scrdiff_y) != 0 ) { edit_scrolly -= (holddiff_y - scrdiff_y); scrdiff_y = holddiff_y; }
+					editbutton(249,0,0);  //ground
+					editbutton(250,16,0); //water
+					editbutton(251,32,0); //forest
+					editbutton(252,48,0); //road
 
-						 if (edit_scrollx < -64) edit_scrollx = -64; if (edit_scrollx > 96*8) edit_scrollx = 96*8;
-						 if (edit_scrolly < -64) edit_scrolly = -64; if (edit_scrolly > 82*8) edit_scrolly = 82*8;
+					editbutton(83,208,0); //load
+					editbutton(84,224,0); //save
 
-					 } else {
-						 scrdiff_x = 0; scrdiff_y = 0;
-					 }
+					if (editbutton(85,240,0)) { //exit
+						sdl_ui_mode = UI_MAINMENU;
+					} 
 
-					 break; }
+					if (hold(0,16,255,208,1)) {
+						//left mouse button held, paint
+
+						int16_t mappos_x = mousecoords.x + edit_scrollx;
+						int16_t mappos_y = mousecoords.y + edit_scrolly;
+
+					} else if (hold(0,16,255,208,4)) {
+						//right mouse button held, scroll
+						holddiff_x = (mousecoords.x - mousecoords.press_x);
+						holddiff_y = (mousecoords.y - mousecoords.press_y);
+
+						if ((holddiff_x - scrdiff_x) != 0 ) { edit_scrollx -= (holddiff_x - scrdiff_x); scrdiff_x = holddiff_x; }
+						if ((holddiff_y - scrdiff_y) != 0 ) { edit_scrolly -= (holddiff_y - scrdiff_y); scrdiff_y = holddiff_y; }
+
+						if (edit_scrollx < -64) edit_scrollx = -64; if (edit_scrollx > 96*8) edit_scrollx = 96*8;
+						if (edit_scrolly < -64) edit_scrolly = -64; if (edit_scrolly > 82*8) edit_scrolly = 82*8;
+
+					} else {
+						scrdiff_x = 0; scrdiff_y = 0;
+					}
+
+					break; }
 		case UI_OPTIONS: {
 					 if (reload_city) {
 						 int r = read_png_map(map_fname,citytiles);
@@ -342,7 +356,7 @@ void ui_updatefunc(void) {
 					 strcpy(newfile,map_fname);
 					 strcat(newfile,".srm");
 					 find_png_filename(map_fname,cityname);
-			
+
 					 for (int i=0; i < 8; i++) cityname[i] = toupper(cityname[i]);
 
 					 uint32_t c = 0xFF0000;
@@ -394,10 +408,10 @@ void ui_updatefunc(void) {
 								    break;
 						    case OP_FIXCKSUM: r = fixsram(city_fname);
 								      break;
-					 		case OP_EXPORT: strcpy(newfile,city_fname);
-								      strcat(newfile,".png");
-					 				city2png(city_fname,newfile,citynum);
-								      break;
+						    case OP_EXPORT: strcpy(newfile,city_fname);
+								    strcat(newfile,".png");
+								    city2png(city_fname,newfile,citynum);
+								    break;
 					    }
 					    sdl_ui_mode = r ? UI_ERROR : UI_SUCCESS;
 					    // working...
@@ -424,7 +438,7 @@ void ui_updatefunc(void) {
 
 				       s_addstr_c("close the window to exit.",160,0);
 
-					 if (button(58,"BACK",176,184,7)) sdl_ui_mode = UI_MAINMENU;
+				       if (button(58,"BACK",176,184,7)) sdl_ui_mode = UI_MAINMENU;
 				       // error
 				       break; }
 	}
