@@ -8,8 +8,6 @@
 #include "pngmap.h"
 #include "sdl_ui.h"
 
-int sdl_ui_mode = 0;
-int sdl_ui_operation = -1;
 
 char city_fname[PATH_MAX], map_fname[PATH_MAX];
 
@@ -41,6 +39,7 @@ enum brushtypes {
 
 uint8_t brushtype = 0;
 uint16_t curtile = 0; //current tile
+uint8_t smoothmode = 1; //smooth mode enabled?
 
 int16_t holddiff_x = 0, holddiff_y = 0;
 int16_t scrdiff_x = 0, scrdiff_y = 0;
@@ -109,9 +108,18 @@ enum ui_modes {
 	UI_DROPPNG,
 	UI_OPTIONS,
 	UI_EDITOR,
+	UI_SAVEMENU,
 	UI_PROCESSING,
 	UI_SUCCESS,
 	UI_ERROR
+};
+
+enum ui_operations {
+	OP_LOADING, // no map loaded yet.
+	OP_CREATENEW, // create new SRAM based on map
+	OP_MAP_TO_SRAM, // save map into existing SRAM
+	OP_MAP_TO_PNG, // save map as PNG
+	OP_EXIT
 };
 
 enum import_modes {
@@ -123,14 +131,8 @@ enum import_modes {
 	I_COUNT
 };
 
-enum ui_operations {
-	OP_CREATENEW,
-	OP_IMPORT,
-	OP_FIXCKSUM,
-	OP_EXPORT,
-	OP_EDITOR,
-	OP_EXIT
-};
+int sdl_ui_mode = 0;
+int sdl_ui_operation = OP_LOADING;
 
 int import_mode = 0;
 
@@ -248,17 +250,43 @@ void ui_updatefunc(void) {
 
 	switch(sdl_ui_mode) {
 
-
 		case UI_MAINMENU: {
-					  // main menu
+					  // main/load menu
 
 					  box(6,16,64,28,18,1);
 
-					  int r = sdl_ui_menu(6,(char* []){"New SRAM from map","Load map into SRAM","Fix SRAM check sum","Export map into PNG","TODO - Draw new map","Exit"},80);
-					  if (r == OP_CREATENEW) { sdl_ui_mode = UI_DROPPNG; sdl_ui_operation = r; }
-					  if (r == OP_EDITOR) { sdl_ui_mode = UI_EDITOR; }
-					  if ((r == OP_IMPORT) || (r == OP_FIXCKSUM) || (r == OP_EXPORT)) { sdl_ui_mode = UI_DROPSRAM; sdl_ui_operation = r; }
-					  if (r == OP_EXIT) exit(0);
+					  enum loadmenuops {
+						  MM_EMPTY,
+						  MM_LOAD_PNG,
+						  MM_LOAD_SRAM,
+						  MM_EXIT
+					  };
+
+					  int r = sdl_ui_menu(4,(char* []){"Open map editor","Load map from PNG","Load map from SRAM","Exit"},80);
+
+					  if (r == MM_EMPTY) { sdl_ui_mode = UI_EDITOR; }
+					  if (r == MM_LOAD_PNG) { sdl_ui_mode = UI_DROPPNG; sdl_ui_operation = OP_LOADING; }
+					  if (r == MM_LOAD_SRAM) { sdl_ui_mode = UI_DROPSRAM; sdl_ui_operation = OP_LOADING; }
+					  if (r == MM_EXIT) exit(0);
+
+					  break; }
+		case UI_SAVEMENU: {
+					  box(6,16,64,28,18,1);
+
+					  enum savemenuops {
+						  SM_SAVE_PNG,
+						  SM_NEW_SRAM,
+						  SM_EXIST_SRAM,
+						  SM_BACK
+					  };
+
+					  int r = sdl_ui_menu(4,(char* []){"Save map as PNG","Save into new SRAM","Save into existing SRAM","Continue editing"},80);
+
+					  if (r == SM_SAVE_PNG) { sdl_ui_operation = OP_MAP_TO_PNG; sdl_ui_mode = UI_PROCESSING; }
+					  if (r == SM_NEW_SRAM) { sdl_ui_operation = OP_CREATENEW; sdl_ui_mode = UI_PROCESSING; }
+					  if (r == SM_EXIST_SRAM) { sdl_ui_operation = OP_MAP_TO_SRAM; sdl_ui_mode = UI_DROPSRAM; }
+					  if (r == SM_BACK) { sdl_ui_mode = UI_EDITOR; }
+
 					  break; }
 		case UI_DROPSRAM: {
 					  // drop city file here
@@ -269,7 +297,7 @@ void ui_updatefunc(void) {
 					  s_addstr_c("into this window",96,1);
 
 					  if (getdrop(city_fname,PATH_MAX))
-						  sdl_ui_mode = (sdl_ui_operation == OP_FIXCKSUM ? UI_PROCESSING : UI_SELCITY);
+						  sdl_ui_mode = UI_SELCITY;
 
 					  if (button(58,"BACK",176,184,7)) sdl_ui_mode = UI_MAINMENU;
 
@@ -285,7 +313,20 @@ void ui_updatefunc(void) {
 					 if (r != 0) sdl_ui_mode = UI_ERROR;
 
 					 r = sdl_ui_menu(3,(char* []){city1,city2,"Back"},80);
-					 if (r >= 0) { citynum = r; sdl_ui_mode = (sdl_ui_operation == OP_EXPORT ? UI_PROCESSING : UI_DROPPNG); }
+					 if (r >= 0) {
+						 citynum = r;
+
+						 if (sdl_ui_operation == OP_LOADING) {
+
+							 loadsramcity(city_fname,citytiles,citynum);
+							 sdl_ui_mode = UI_SAVEMENU;
+
+						 } else {
+
+							 sdl_ui_mode = UI_PROCESSING;
+						 }
+					 }
+
 					 if (r == 2) sdl_ui_mode = UI_MAINMENU;
 					 // select city 1 or 2
 					 break; }
@@ -336,36 +377,48 @@ void ui_updatefunc(void) {
 						case BT_PICKER: ctilespr = 81; break;
 					}
 					spr(ctilespr,100,3,1,1); //current tile
-					
-					editbutton(68,112,0); //smooth mode
+
+					if (editbutton(smoothmode ? 69 : 68,112,0)) smoothmode = !smoothmode; //smooth mode
 					if (editbutton(81,128,0)) brushtype = BT_PICKER; //tile picker
 					editbutton(82,144,0); //undo?
 
-					editbutton(83,208,0); //load
-					editbutton(84,224,0); //save
-
+					if (editbutton(83,208,0)) sdl_ui_mode = UI_MAINMENU; //load
+					if (editbutton(84,224,0)) sdl_ui_mode = UI_SAVEMENU; //save
 
 					if (editbutton(85,240,0)) { //exit
 						sdl_ui_mode = UI_MAINMENU;
 					} 
 
 					if (hover(0,16,255,208)) {
-						
+
 						int16_t tilepos_x = (mousecoords.x + edit_scrollx) & 0xFFF8;
 						int16_t tilepos_y = (mousecoords.y + edit_scrolly) & 0xFFF8;
 
 						spr(80, tilepos_x - edit_scrollx, tilepos_y - edit_scrolly, 1,1);
 
 					}
-					
+
 					if (hold(0,16,255,208,1)) {
 						//left mouse button held, paint
 
 						int16_t tilepos_x = (mousecoords.x + edit_scrollx) / 8;
-						int16_t tilepos_y = (mousecoords.y + edit_scrolly) / 8;
+						int16_t tilepos_y = (mousecoords.y + edit_scrolly - 16) / 8;
 
 						if ((tilepos_x >= 0) && (tilepos_x < CITYWIDTH) && (tilepos_y >= 0) && (tilepos_y < CITYHEIGHT)) {
 
+							switch (brushtype) {
+								case BT_EMPTY: citytiles[CITYWIDTH * tilepos_y + tilepos_x] = 0; break;
+								case BT_WATER: citytiles[CITYWIDTH * tilepos_y + tilepos_x] = 1; break;
+								case BT_WATERSHIP: citytiles[CITYWIDTH * tilepos_y + tilepos_x] = 3; break;
+								case BT_WATERCOAST: citytiles[CITYWIDTH * tilepos_y + tilepos_x] = 2; break;
+
+								case BT_FOREST: citytiles[CITYWIDTH*tilepos_y + tilepos_x] = 14; break;
+								case BT_ROAD: citytiles[CITYWIDTH*tilepos_y + tilepos_x] = 32; break;
+
+								case BT_TILE: citytiles[CITYWIDTH*tilepos_y + tilepos_x] = curtile; break;	      
+
+								case BT_PICKER: brushtype = BT_TILE; curtile = citytiles[tilepos_y * CITYWIDTH + tilepos_x];
+							}
 							// paint.
 						}
 
@@ -444,8 +497,12 @@ void ui_updatefunc(void) {
 						 reload_city = 1;
 					 }
 
-					 if (button(58,"START",176,156,7)) {
-						 sdl_ui_mode = UI_PROCESSING;
+					 if (button(58,"EDIT",176,128,7)) {
+						 sdl_ui_mode = UI_EDITOR;
+					 }
+
+					 if (button(58,"SAVE",176,156,7)) {
+						 sdl_ui_mode = UI_SAVEMENU;
 					 }
 
 					 if (button(58,"BACK",176,184,7)) sdl_ui_mode = UI_MAINMENU;
@@ -460,14 +517,12 @@ void ui_updatefunc(void) {
 					    switch (sdl_ui_operation) {
 						    case OP_CREATENEW: r = write_new_city(newfile,citytiles,cityname,0);
 								       break;
-						    case OP_IMPORT: r = replace_city(city_fname,citytiles,citynum);
-								    break;
-						    case OP_FIXCKSUM: r = fixsram(city_fname);
-								      break;
-						    case OP_EXPORT: strcpy(newfile,city_fname);
-								    strcat(newfile,".png");
-								    city2png(city_fname,newfile,citynum);
-								    break;
+						    case OP_MAP_TO_SRAM: r = replace_city(city_fname,citytiles,citynum);
+									 break;
+						    case OP_MAP_TO_PNG: strcpy(newfile,city_fname);
+									strcat(newfile,".png");
+									city2png(city_fname,newfile,citynum);
+									break;
 					    }
 					    sdl_ui_mode = r ? UI_ERROR : UI_SUCCESS;
 					    // working...

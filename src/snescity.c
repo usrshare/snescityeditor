@@ -282,6 +282,45 @@ int city_compress (const uint16_t* in, uint16_t* out, size_t* outsz, size_t max_
 	return 0; //EOF
 }
 
+int loadsramcity (const char* sfname, uint16_t* citydata, int citynum) {
+
+	FILE* cityfile = fopen(sfname, "rb");
+	if (!cityfile) { perror("fopen city file"); city_lasterror = "unable to open city file."; return 1; }
+
+	// read city
+
+	fseek(cityfile,cityoffset[citynum] + 0x66,SEEK_SET); // city name location
+
+	char cityname[9];
+	uint8_t namelen = 0;
+	fread(&namelen,1,1,cityfile);
+	fread(cityname,namelen,1,cityfile);
+	for (int i=0; i < namelen; i++) cityname[i] = namechars[cityname[i]];
+	cityname[namelen] = 0;
+	printf("City name: %s\n",cityname);
+
+	uint8_t sramfile[CITYMAPLEN];
+	memset(sramfile,0xFF,CITYMAPLEN);	
+
+	fseek(cityfile,cityoffset[citynum] + CITYMAPSTART,SEEK_SET);
+
+	fread(sramfile,CITYMAPLEN,1,cityfile);
+
+	uint16_t citytemp[CITYWIDTH * CITYHEIGHT];
+	uint16_t citytemp2[CITYWIDTH * CITYHEIGHT];
+	memset(citytemp,0,sizeof citytemp);
+	memset(citytemp2,0,sizeof citytemp);
+	memset(citydata,0,sizeof citydata);
+
+	size_t citysize = 0;
+
+	city_decompress((const uint16_t*)sramfile,(uint16_t*)citytemp,&citysize);
+	city_decompress2((const uint16_t*)citytemp,(uint16_t*)citytemp2,&citysize);
+	city_decompress3((const uint16_t*)citytemp2,(uint16_t*)citydata,&citysize);
+
+	fclose(cityfile);
+}
+
 int city2png (const char* sfname, const char* mfname, int citynum) {
 
 	FILE* cityfile = fopen(sfname, "rb");
