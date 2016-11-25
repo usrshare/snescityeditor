@@ -39,7 +39,7 @@ uint32_t pngcolors[] = {
 	0x007B00, //1C forest SE
 	0x119411, //1D forest alt NW
 	0x0F920F, //1E forest alt N
-	0x0D900D, //2F forest alt NE
+	0x0D900D, //1F forest alt NE
 	0x0A8D04, //20 forest alt W
 	0x018401, //21 forest alt
 	0x018201, //22 forest alt E

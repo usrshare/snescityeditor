@@ -21,8 +21,25 @@ int citynum = 0;
 int reload_city = 0;
 uint16_t citytiles[CITYWIDTH*CITYHEIGHT];
 
+// editor-related parameters
+
 int16_t edit_scrollx = -1;
 int16_t edit_scrolly = -1;
+
+enum brushtypes {
+	BT_EMPTY,
+	BT_WATER,
+	BT_WATERSHIP,
+	BT_WATERCOAST,
+	BT_FOREST,
+	BT_ROAD,
+	BT_RAIL,
+	BT_TILE,
+	BT_COUNT
+};
+
+uint8_t brushtype = 0;
+uint16_t curtile = 0; //current tile
 
 int16_t holddiff_x = 0, holddiff_y = 0;
 int16_t scrdiff_x = 0, scrdiff_y = 0;
@@ -129,10 +146,10 @@ int button(uint8_t spr, const char* text, uint8_t x, uint8_t y, uint8_t w) {
 int editbutton(uint8_t s, uint8_t x, uint8_t y) {
 
 	if (hold(x,y,16,16,1)) {
-		spr(171,x,y,2,2);
+		spr(50,x,y,2,2);
 		spr(s,x+4,y+4,1,1);
 	} else {
-		spr(169,x,y,2,2);
+		spr(48,x,y,2,2);
 		spr(s,x+4,y+2,1,1);
 	}
 
@@ -142,10 +159,10 @@ int editbutton(uint8_t s, uint8_t x, uint8_t y) {
 uint8_t citysprite(uint16_t tile) {
 
 	switch(tile) {
-		case 0x00: return 9;
+		case 0x00: return 16;
 		case 0x01:
-		case 0x02: return 72; //water
-		case 0x03: return 57; //water with path for ships
+		case 0x02: return 71; //water
+		case 0x03: return 52; //water with path for ships
 			   //shores
 		case 0x0c:
 		case 0x04: return 54;
@@ -183,17 +200,17 @@ uint8_t citysprite(uint16_t tile) {
 		case 0x1c:
 		case 0x25: return 0xcf;
 
-		case 0x32: return 0xc0;
-		case 0x33: return 0xc1;
-		case 0x34: return 0xc2;
-		case 0x35: return 0xc3;
-		case 0x36: return 0xc4;
-		case 0x37: return 0xc5;
-		case 0x38: return 0xc6;
-		case 0x39: return 0xc7;
-		case 0x3a: return 0xc8;
-		case 0x3b: return 0xc9;
-		case 0x3c: return 0xca;
+		case 0x32: return 0xc3;
+		case 0x33: return 0xc4;
+		case 0x34: return 0xca;
+		case 0x35: return 0xaa;
+		case 0x36: return 0xac;
+		case 0x37: return 0xcc;
+		case 0x38: return 0xcb;
+		case 0x39: return 0xba;
+		case 0x3a: return 0xab;
+		case 0x3b: return 0xbc;
+		case 0x3c: return 0xbb;
 
 		default: return 253; //weird tile
 	}
@@ -292,16 +309,39 @@ void ui_updatefunc(void) {
 
 					drawcity(edit_scrollx,edit_scrolly);
 
-					fillspr(25,0,0,32,1);
-					fillspr(41,0,8,32,1);
+					fillspr(1,0,0,32,1);
+					fillspr(17,0,8,32,1);
 
-					editbutton(249,0,0);  //ground
-					editbutton(250,16,0); //water
-					editbutton(251,32,0); //forest
-					editbutton(252,48,0); //road
+					if (editbutton(32,0,0)) brushtype = BT_EMPTY;  //ground
+					if (editbutton(33,16,0)) brushtype = BT_WATER; //water
+					if (editbutton(34,32,0)) brushtype = BT_FOREST; //forest
+					if (editbutton(35,48,0)) brushtype = BT_ROAD; //road
+					if (editbutton(36,64,0)) brushtype = BT_RAIL; //rail
+					if (editbutton(37,80,0)) brushtype = BT_TILE; //custom tile
+
+					spr(2,96,0,2,2); //current tile box
+
+					uint8_t ctilespr = 0;
+
+					switch(brushtype) {
+						case BT_EMPTY: ctilespr = 32; break;
+						case BT_WATER: ctilespr = 33; break;
+						case BT_WATERSHIP: ctilespr = 52; break;
+						case BT_WATERCOAST: ctilespr = 53; break;
+						case BT_FOREST: ctilespr = 34; break;
+						case BT_ROAD: ctilespr = 35; break;
+						case BT_RAIL: ctilespr = 36; break;
+						case BT_TILE: ctilespr = citysprite(curtile); break;
+					}
+					spr(ctilespr,100,3,1,1); //current tile
+					
+					editbutton(68,112,0); //smooth mode
+					editbutton(81,128,0); //tile picker
+					editbutton(82,144,0); //undo?
 
 					editbutton(83,208,0); //load
 					editbutton(84,224,0); //save
+
 
 					if (editbutton(85,240,0)) { //exit
 						sdl_ui_mode = UI_MAINMENU;

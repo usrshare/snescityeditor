@@ -105,7 +105,7 @@ int spr(uint8_t spr, int16_t x, int16_t y, uint8_t w, uint8_t h) {
 	return SDL_BlitSurface(tsurf,&sr,scs,&dr);
 }
 
-const char* sprchars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ,.- >";
+const char* sprchars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ,.-";
 
 int s_addstr(const char* text, uint8_t x, uint8_t y, uint8_t font) {
 
@@ -156,7 +156,7 @@ int sdl_ui_menu(int choice_c, char** choice_v, int sy) {
 	for (int i=0; i < choice_c; i++) {
 
 		if (menu_foc == i) {
-			s_addstr(">",32,sy+(16*i),0);
+			spr(9,32,sy+(16*i),1,2);
 		} else {
 			spr(23,32,sy+(16*i),1,1);
 			spr(23,32,sy+(16*i)+8,1,1);
