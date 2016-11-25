@@ -35,6 +35,7 @@ enum brushtypes {
 	BT_ROAD,
 	BT_RAIL,
 	BT_TILE,
+	BT_PICKER,
 	BT_COUNT
 };
 
@@ -332,11 +333,12 @@ void ui_updatefunc(void) {
 						case BT_ROAD: ctilespr = 35; break;
 						case BT_RAIL: ctilespr = 36; break;
 						case BT_TILE: ctilespr = citysprite(curtile); break;
+						case BT_PICKER: ctilespr = 81; break;
 					}
 					spr(ctilespr,100,3,1,1); //current tile
 					
 					editbutton(68,112,0); //smooth mode
-					editbutton(81,128,0); //tile picker
+					if (editbutton(81,128,0)) brushtype = BT_PICKER; //tile picker
 					editbutton(82,144,0); //undo?
 
 					editbutton(83,208,0); //load
@@ -347,11 +349,25 @@ void ui_updatefunc(void) {
 						sdl_ui_mode = UI_MAINMENU;
 					} 
 
+					if (hover(0,16,255,208)) {
+						
+						int16_t tilepos_x = (mousecoords.x + edit_scrollx) & 0xFFF8;
+						int16_t tilepos_y = (mousecoords.y + edit_scrolly) & 0xFFF8;
+
+						spr(80, tilepos_x - edit_scrollx, tilepos_y - edit_scrolly, 1,1);
+
+					}
+					
 					if (hold(0,16,255,208,1)) {
 						//left mouse button held, paint
 
-						int16_t mappos_x = mousecoords.x + edit_scrollx;
-						int16_t mappos_y = mousecoords.y + edit_scrolly;
+						int16_t tilepos_x = (mousecoords.x + edit_scrollx) / 8;
+						int16_t tilepos_y = (mousecoords.y + edit_scrolly) / 8;
+
+						if ((tilepos_x >= 0) && (tilepos_x < CITYWIDTH) && (tilepos_y >= 0) && (tilepos_y < CITYHEIGHT)) {
+
+							// paint.
+						}
 
 					} else if (hold(0,16,255,208,4)) {
 						//right mouse button held, scroll

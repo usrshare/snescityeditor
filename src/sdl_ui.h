@@ -21,6 +21,7 @@ extern struct mousecoord mousecoords;
 
 typedef void (*cb_noparam)(void);
 
+int hover(uint8_t x, uint8_t y, uint8_t w, uint8_t h);
 int hold(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t bmask);
 int click(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t bmask);
 

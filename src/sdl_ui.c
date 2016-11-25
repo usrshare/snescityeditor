@@ -32,6 +32,12 @@ char dropfilename[PATH_MAX];
 int menu_cnt = -1;
 int menu_foc = -1;
 
+int hover(uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
+
+	if ((mousecoords.x >= x) && (mousecoords.x < (x+w)) &&
+	(mousecoords.y >= y) && (mousecoords.y < (y+h))) return 1; else return 0;
+}
+
 int hold(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t bmask) {
 
 	if ( (mousecoords.press_x >= x) && (mousecoords.press_x < (x+w)) &&
