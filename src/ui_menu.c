@@ -16,8 +16,10 @@ char cityname[9];
 
 int citynum = 0;
 
-int reload_city = 0;
 uint16_t citytiles[CITYWIDTH*CITYHEIGHT];
+
+int transform_city = 0;
+uint16_t citytiles_trans[CITYWIDTH*CITYHEIGHT];
 
 // editor-related parameters
 
@@ -265,8 +267,8 @@ void ui_updatefunc(void) {
 					  int r = sdl_ui_menu(4,(char* []){"Open map editor","Load map from PNG","Load map from SRAM","Exit"},80);
 
 					  if (r == MM_EMPTY) { sdl_ui_mode = UI_EDITOR; }
-					  if (r == MM_LOAD_PNG) { sdl_ui_mode = UI_DROPPNG; sdl_ui_operation = OP_LOADING; }
-					  if (r == MM_LOAD_SRAM) { sdl_ui_mode = UI_DROPSRAM; sdl_ui_operation = OP_LOADING; }
+					  if (r == MM_LOAD_PNG) { sdl_ui_mode = UI_DROPPNG; cityname[0] = 0; sdl_ui_operation = OP_LOADING; }
+					  if (r == MM_LOAD_SRAM) { sdl_ui_mode = UI_DROPSRAM; cityname[0] = 0; sdl_ui_operation = OP_LOADING; }
 					  if (r == MM_EXIT) exit(0);
 
 					  break; }
@@ -318,7 +320,7 @@ void ui_updatefunc(void) {
 
 						 if (sdl_ui_operation == OP_LOADING) {
 
-							 loadsramcity(city_fname,citytiles,citynum);
+							 loadsramcity(city_fname,citytiles,citynum,cityname);
 							 sdl_ui_mode = UI_SAVEMENU;
 
 						 } else {
@@ -339,7 +341,8 @@ void ui_updatefunc(void) {
 					 s_addstr_c("into this window",96,1);
 
 					 if (getdrop(map_fname,PATH_MAX)) {
-						 reload_city = 1;
+						 int r = read_png_map(map_fname,citytiles);
+						 transform_city = 1;
 						 sdl_ui_mode = UI_OPTIONS;
 						 import_mode = 0;
 					 }
@@ -439,24 +442,25 @@ void ui_updatefunc(void) {
 
 					break; }
 		case UI_OPTIONS: {
-					 if (reload_city) {
-						 int r = read_png_map(map_fname,citytiles);
+					 if (transform_city) {
+
+						 memcpy(citytiles_trans,citytiles,sizeof citytiles);
 
 						 switch(import_mode) {
 							 case I_NOCOAST:
-								 city_improve(citytiles,0);
+								 city_improve(citytiles_trans,0);
 								 break;
 							 case I_SIMPLECOAST:
-								 city_improve(citytiles,1);
+								 city_improve(citytiles_trans,1);
 								 break;
 							 case I_THICKCOAST:
-								 city_improve(citytiles,3);
+								 city_improve(citytiles_trans,3);
 								 break;
 							 case I_TESTING:
-								 city_improve(citytiles,5);
+								 city_improve(citytiles_trans,5);
 								 break;
 						 }
-						 reload_city = 0;
+						 transform_city = 0;
 					 }
 
 					 box(13,16,64,28,18,1);
@@ -475,7 +479,7 @@ void ui_updatefunc(void) {
 					 for (int iy=0; iy < CITYHEIGHT; iy++) {
 						 for (int ix=0; ix < CITYWIDTH; ix++) {
 
-							 uint16_t v = citytiles[iy*CITYWIDTH+ix];
+							 uint16_t v = citytiles_trans[iy*CITYWIDTH+ix];
 							 if (v < pngcolor_c) c = pngcolors[v]; else c = 0xFF0000;
 
 							 pset(c, 40 + ix, 92+iy);
@@ -494,14 +498,16 @@ void ui_updatefunc(void) {
 					 if (button(58,import_desc[import_mode],176,96,7)) {
 						 import_mode += 1;
 						 if (import_mode >= I_COUNT) import_mode = 0;
-						 reload_city = 1;
+						 transform_city = 1;
 					 }
 
 					 if (button(58,"EDIT",176,128,7)) {
+						 memcpy(citytiles,citytiles_trans,sizeof citytiles);
 						 sdl_ui_mode = UI_EDITOR;
 					 }
 
 					 if (button(58,"SAVE",176,156,7)) {
+						 memcpy(citytiles,citytiles_trans,sizeof citytiles);
 						 sdl_ui_mode = UI_SAVEMENU;
 					 }
 
@@ -515,13 +521,16 @@ void ui_updatefunc(void) {
 
 					    int r = 0;
 					    switch (sdl_ui_operation) {
-						    case OP_CREATENEW: r = write_new_city(newfile,citytiles,cityname,0);
+						    case OP_CREATENEW:
+							    		strcpy(newfile,cityname);
+									strcat(newfile,".srm");
+							   		r = write_new_city(newfile,citytiles,cityname,0);
 								       break;
 						    case OP_MAP_TO_SRAM: r = replace_city(city_fname,citytiles,citynum);
 									 break;
-						    case OP_MAP_TO_PNG: strcpy(newfile,city_fname);
+						    case OP_MAP_TO_PNG: strcpy(newfile,cityname);
 									strcat(newfile,".png");
-									city2png(city_fname,newfile,citynum);
+									r = write_png_map (newfile, citytiles);
 									break;
 					    }
 					    sdl_ui_mode = r ? UI_ERROR : UI_SUCCESS;
