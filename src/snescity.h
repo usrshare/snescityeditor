@@ -6,7 +6,7 @@ extern char* city_lasterror;
 
 int find_png_filename(const char* filename, char* o_f);
 
-int loadsramcity (const char* sfname, uint16_t* citydata, int citynum);
+int loadsramcity (const char* sfname, uint16_t* citydata, int citynum, char* o_cityname);
 int write_new_city(const char* sfname, const uint16_t* citydata, const char* cityname, int citynum);
 int replace_city(const char* sfname, const uint16_t* citydata, int citynum);
 

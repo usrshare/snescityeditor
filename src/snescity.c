@@ -282,7 +282,7 @@ int city_compress (const uint16_t* in, uint16_t* out, size_t* outsz, size_t max_
 	return 0; //EOF
 }
 
-int loadsramcity (const char* sfname, uint16_t* citydata, int citynum) {
+int loadsramcity (const char* sfname, uint16_t* citydata, int citynum, char* o_cityname) {
 
 	FILE* cityfile = fopen(sfname, "rb");
 	if (!cityfile) { perror("fopen city file"); city_lasterror = "unable to open city file."; return 1; }
@@ -298,6 +298,8 @@ int loadsramcity (const char* sfname, uint16_t* citydata, int citynum) {
 	for (int i=0; i < namelen; i++) cityname[i] = namechars[cityname[i]];
 	cityname[namelen] = 0;
 	printf("City name: %s\n",cityname);
+
+	if (o_cityname) strncpy(o_cityname, cityname, 9);
 
 	uint8_t sramfile[CITYMAPLEN];
 	memset(sramfile,0xFF,CITYMAPLEN);	
