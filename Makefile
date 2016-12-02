@@ -30,6 +30,9 @@ OBJS = $(patsubst %,$(OBJDIR)/%,$(_OBJS))
 snescityeditor: $(OBJS)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
+llist_test: $(OBJDIR)/llist.o
+	$(CC) -o $@ $^ $(LDFLAGS)
+
 $(OBJDIR)/%.o: $(SRCDIR)/%.c $(OBJDIR)
 	$(CC) -c -o $@ $< $(CFLAGS) $(DEFS)
 
