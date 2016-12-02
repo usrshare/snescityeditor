@@ -41,6 +41,7 @@ enum brushtypes {
 
 uint8_t brushtype = 0;
 uint16_t curtile = 0; //current tile
+uint8_t tilepalette = 0; //tile palette mode?
 uint8_t smoothmode = 1; //smooth mode enabled?
 
 int16_t holddiff_x = 0, holddiff_y = 0;
@@ -217,6 +218,18 @@ uint8_t citysprite(uint16_t tile) {
 		case 0x3b: return 0xbc;
 		case 0x3c: return 0xbb;
 
+		case 0x72: return 0xc5;
+		case 0x73: return 0xc6;
+		case 0x74: return 0xc7;
+		case 0x75: return 0xa7;
+		case 0x76: return 0xa9;
+		case 0x77: return 0xc9;
+		case 0x78: return 0xc8;
+		case 0x79: return 0xb7;
+		case 0x7a: return 0xa8;
+		case 0x7b: return 0xb9;
+		case 0x7c: return 0xb8;
+
 		default: return 253; //weird tile
 	}
 }
@@ -355,16 +368,21 @@ void ui_updatefunc(void) {
 					drawcity(edit_scrollx,edit_scrolly);
 
 					fillspr(1,0,0,32,1);
-					fillspr(17,0,8,32,1);
 
-					if (editbutton(32,0,0)) brushtype = BT_EMPTY;  //ground
-					if (editbutton(33,16,0)) brushtype = BT_WATER; //water
-					if (editbutton(34,32,0)) brushtype = BT_FOREST; //forest
-					if (editbutton(35,48,0)) brushtype = BT_ROAD; //road
-					if (editbutton(36,64,0)) brushtype = BT_RAIL; //rail
-					if (editbutton(37,80,0)) brushtype = BT_TILE; //custom tile
+					uint8_t citytop = tilepalette ? 32 : 16;
+					uint8_t cityhgt = tilepalette ? 192 : 208;
+					
+					if (tilepalette) {
 
-					spr(2,96,0,2,2); //current tile box
+						fillspr(1,0,8,32,1);
+						fillspr(1,0,16,32,1);
+						fillspr(17,0,24,32,1);
+					} else {
+
+						fillspr(17,0,8,32,1);
+					}
+
+					spr(2,0,0,2,2); //current tile box
 
 					uint8_t ctilespr = 0;
 
@@ -379,20 +397,65 @@ void ui_updatefunc(void) {
 						case BT_TILE: ctilespr = citysprite(curtile); break;
 						case BT_PICKER: ctilespr = 81; break;
 					}
-					spr(ctilespr,100,3,1,1); //current tile
+					spr(ctilespr,4,3,1,1); //current tile
 
-					if (editbutton(smoothmode ? 69 : 68,112,0)) smoothmode = !smoothmode; //smooth mode
-					if (editbutton(81,128,0)) brushtype = BT_PICKER; //tile picker
-					editbutton(82,144,0); //undo?
+					if (tilepalette) {
 
-					if (editbutton(83,208,0)) sdl_ui_mode = UI_MAINMENU; //load
-					if (editbutton(84,224,0)) sdl_ui_mode = UI_SAVEMENU; //save
+						uint16_t tilelist[] = {
+							// 1    2    3    4    5    6    7    8    9   10   11   12   13   14   15
+							0x00,0x04,0x05,0x06,0x14,0x15,0x16,0x32,0x35,0x3a,0x36,0x72,0x75,0x7a,0x76,
+							0x02,0x07,0x01,0x08,0x17,0x18,0x19,0x33,0x3b,0x3c,0x39,0x73,0x7b,0x7c,0x79,
+							0x03,0x09,0x0a,0x0b,0x1a,0x1b,0x1c,0x00,0x34,0x38,0x37,0x00,0x74,0x78,0x77,
+						};
 
-					if (editbutton(85,240,0)) { //exit
-						sdl_ui_mode = UI_MAINMENU;
-					} 
+#define PWIDTH 15
 
-					if (hover(0,16,255,208)) {
+						for (int i = 0; i < (sizeof(tilelist) / sizeof(tilelist[0])); i++)
+							spr(citysprite(tilelist[i]), 8*(i%PWIDTH)+24, 4 + (i/PWIDTH)*8, 1, 1);
+
+						if (hover(24,4,PWIDTH*8,24)) {
+
+							int16_t tilepos_x = (mousecoords.x - 24) & 0xFFF8;
+							int16_t tilepos_y = (mousecoords.y - 4) & 0xFFF8;
+							spr(80, tilepos_x + 24, tilepos_y + 4, 1,1);
+						}
+
+						if (hold(24,4,PWIDTH*8,24,1)) {
+
+							int16_t tilepos_x = (mousecoords.x - 24) & 0xFFF8;
+							int16_t tilepos_y = (mousecoords.y - 4) & 0xFFF8;
+
+							int16_t tilenum = (tilepos_x / 8) + (PWIDTH * (tilepos_y/8));
+							curtile = tilelist[tilenum];
+
+						}
+#undef PWIDTH
+						if (editbutton(41,240,0)) tilepalette = 0;
+
+					} else {
+
+						if (editbutton(32,16,0)) brushtype = BT_EMPTY;  //ground
+						if (editbutton(33,32,0)) brushtype = BT_WATER; //water
+						if (editbutton(34,48,0)) brushtype = BT_FOREST; //forest
+						if (editbutton(35,64,0)) brushtype = BT_ROAD; //road
+						if (editbutton(36,80,0)) brushtype = BT_RAIL; //rail
+						if (editbutton(37,96,0)) { brushtype = BT_TILE; tilepalette = 1; } //custom tile
+
+
+						if (editbutton(smoothmode ? 69 : 68,112,0)) smoothmode = !smoothmode; //smooth mode
+						if (editbutton(81,128,0)) brushtype = BT_PICKER; //tile picker
+						editbutton(82,144,0); //undo?
+
+						if (editbutton(83,208,0)) sdl_ui_mode = UI_MAINMENU; //load
+						if (editbutton(84,224,0)) sdl_ui_mode = UI_SAVEMENU; //save
+
+						if (editbutton(85,240,0)) { //exit
+							sdl_ui_mode = UI_MAINMENU;
+						} 
+
+					}
+
+					if (hover(0,citytop,255,cityhgt)) {
 
 						int16_t tilepos_x = (mousecoords.x + edit_scrollx) & 0xFFF8;
 						int16_t tilepos_y = (mousecoords.y + edit_scrolly) & 0xFFF8;
@@ -401,7 +464,7 @@ void ui_updatefunc(void) {
 
 					}
 
-					if (hold(0,16,255,208,1)) {
+					if (hold(0,citytop,255,cityhgt,1)) {
 						//left mouse button held, paint
 
 						int16_t tilepos_x = (mousecoords.x + edit_scrollx) / 8;
@@ -425,7 +488,7 @@ void ui_updatefunc(void) {
 							// paint.
 						}
 
-					} else if (hold(0,16,255,208,4)) {
+					} else if (hold(0,citytop,255,cityhgt,4)) {
 						//right mouse button held, scroll
 						holddiff_x = (mousecoords.x - mousecoords.press_x);
 						holddiff_y = (mousecoords.y - mousecoords.press_y);
@@ -522,10 +585,10 @@ void ui_updatefunc(void) {
 					    int r = 0;
 					    switch (sdl_ui_operation) {
 						    case OP_CREATENEW:
-							    		strcpy(newfile,cityname);
-									strcat(newfile,".srm");
-							   		r = write_new_city(newfile,citytiles,cityname,0);
-								       break;
+							    strcpy(newfile,cityname);
+							    strcat(newfile,".srm");
+							    r = write_new_city(newfile,citytiles,cityname,0);
+							    break;
 						    case OP_MAP_TO_SRAM: r = replace_city(city_fname,citytiles,citynum);
 									 break;
 						    case OP_MAP_TO_PNG: strcpy(newfile,cityname);
