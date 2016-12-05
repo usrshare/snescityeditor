@@ -292,20 +292,15 @@ void edit_spreadwater(uint8_t x, uint8_t y) {
 
 	LLIST_NEW(citycoord, queue);
 
-	if (y>0) {
-		if (x>0) llist_citycoord_push(&queue, (citycoord){x-1,y-1}); 
-		llist_citycoord_push(&queue, (citycoord){x,y-1});
-		if (x<(CITYWIDTH-1)) llist_citycoord_push(&queue, (citycoord){x+1,y-1});
-	}
+	if (y>0) llist_citycoord_push(&queue, (citycoord){x,y-1}); //N
+	if (x>0) llist_citycoord_push(&queue, (citycoord){x-1,y}); //W
+	if (x<(CITYWIDTH-1)) llist_citycoord_push(&queue, (citycoord){x+1,y}); //E
+	if (y < (CITYHEIGHT-1)) llist_citycoord_push(&queue, (citycoord){x,y+1}); //S
 
-	if (x>0) llist_citycoord_push(&queue, (citycoord){x-1,y});
-	if (x<(CITYWIDTH-1)) llist_citycoord_push(&queue, (citycoord){x+1,y});
-
-	if (y < (CITYHEIGHT-1)) {
-		llist_citycoord_push(&queue, (citycoord){x-1,y+1});
-		llist_citycoord_push(&queue, (citycoord){x,y+1});
-		llist_citycoord_push(&queue, (citycoord){x+1,y+1});
-	}
+	if ((y>0) && (x>0)) llist_citycoord_push(&queue, (citycoord){x-1,y-1}); //NW
+	if ((y>0) && (x<(CITYWIDTH-1))) llist_citycoord_push(&queue, (citycoord){x+1,y-1}); //NE
+	if ((y < (CITYHEIGHT-1)) && (x>0)) llist_citycoord_push(&queue, (citycoord){x-1,y+1}); //SW
+	if ((y < (CITYHEIGHT-1)) && (x < (CITYWIDTH-1)) ) llist_citycoord_push(&queue, (citycoord){x+1,y+1}); //SE
 
 	citycoord n;
 	while (LLIST_EXISTS(queue)) {
@@ -322,10 +317,10 @@ void edit_spreadwater(uint8_t x, uint8_t y) {
 			if (tile_water(x-1,y-1)) llist_citycoord_push(&queue,(citycoord){x-1,y-1});
 			if (tile_water(x,y-1)) llist_citycoord_push(&queue,(citycoord){x,y-1});
 			if (tile_water(x+1,y-1)) llist_citycoord_push(&queue,(citycoord){x+1,y-1});
-			
+
 			if (tile_water(x-1,y)) llist_citycoord_push(&queue,(citycoord){x-1,y});
 			if (tile_water(x+1,y)) llist_citycoord_push(&queue,(citycoord){x+1,y});
-			
+
 			if (tile_water(x-1,y+1)) llist_citycoord_push(&queue,(citycoord){x-1,y+1});
 			if (tile_water(x,y+1)) llist_citycoord_push(&queue,(citycoord){x,y+1});
 			if (tile_water(x+1,y+1)) llist_citycoord_push(&queue,(citycoord){x+1,y+1});
