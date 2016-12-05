@@ -524,7 +524,7 @@ uint16_t improve4(int n) {
 
 int city_water_fix (uint16_t* city, uint8_t ix, uint8_t iy, uint16_t v, int improve_flags) {
 
-	int alttile = ( rand() & 1 ) ? 8 : 0; //use alternative tile?
+	int alttile = (improve_flags & 32) ? 0 : (( rand() & 1 ) ? 8 : 0); //use alternative tile?
 
 	int n = check_neighbors4(city,iy,ix,1,0x13); //water
 	n |= check_neighbors4(city,iy,ix,0x30,0x31); //bridge
@@ -546,6 +546,50 @@ int city_water_fix (uint16_t* city, uint8_t ix, uint8_t iy, uint16_t v, int impr
 	if ((~n & N_W) && (n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x7; //W
 }
 
+int city_water_spread( uint16_t* city, uint8_t ix, uint8_t iy, uint16_t v, int improve_flags) {
+
+	int alttile = (improve_flags & 32) ? 0 : (( rand() & 1 ) ? 8 : 0); //use alternative tile?
+
+	int n = check_neighbors4(city,iy,ix,1,3); //water
+	n |= check_neighbors4(city,iy,ix,0x30,0x31); //bridge
+	if (improve_flags & 8) n &= valid_neighbors(v);
+
+	if (improve_flags & 4) {
+
+		n = check_neighbors(city,iy,ix,1,3); //water
+		n |= check_neighbors(city,iy,ix,0x30,0x31); //bridge
+		if (improve_flags & 8) n &= valid_neighbors(v);
+
+		city[iy*CITYWIDTH+ix] = (improve4(n) >= 4) ? alttile + improve4(n) : improve4(n);
+
+	} else if (improve_flags & 2) {
+
+		if (n == N_S) city[iy*CITYWIDTH+ix] = alttile + 0x5; //N
+		if (n == N_W) city[iy*CITYWIDTH+ix] = alttile + 0x8; //E
+		if (n == N_E) city[iy*CITYWIDTH+ix] = alttile + 0x7; //W
+		if (n == N_N) city[iy*CITYWIDTH+ix] = alttile + 0xA; //S
+
+		if (n == (N_S | N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x4; //NW
+		if (n == (N_S | N_W)) city[iy*CITYWIDTH+ix] = alttile + 0x6; //NE
+		if (n == (N_N | N_W)) city[iy*CITYWIDTH+ix] = alttile + 0xB; //SE
+		if (n == (N_N | N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x9; //SW
+
+		if (n == (N_W | N_S | N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x5; //N
+		if (n == (N_N | N_S | N_W)) city[iy*CITYWIDTH+ix] = alttile + 0x8; //E
+		if (n == (N_N | N_E | N_S)) city[iy*CITYWIDTH+ix] = alttile + 0x7; //W
+		if (n == (N_N | N_E | N_W)) city[iy*CITYWIDTH+ix] = alttile + 0xa; //S
+	} else {
+		if ((~n & N_W) && (n & N_S) && (~n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x4; //NW
+		if ((n & N_W) && (n & N_S) && (~n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x5; //N
+		if ((n & N_W) && (n & N_S) && (~n & N_N) && (~n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x6; //NE
+		if ((n & N_W) && (n & N_S) && (n & N_N) && (~n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x8; //E
+		if ((n & N_W) && (~n & N_S) && (n & N_N) && (~n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0xB; //SE
+		if ((n & N_W) && (~n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0xA; //S
+		if ((~n & N_W) && (~n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x9; //SW
+		if ((~n & N_W) && (n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x7; //W
+	}
+}
+
 int city_improve (uint16_t* city, int improve_flags) {
 
 	//this option makes the map look better.
@@ -564,50 +608,7 @@ int city_improve (uint16_t* city, int improve_flags) {
 				if (improve_flags & 16) {
 
 
-				} else {
-
-					int n = check_neighbors4(city,iy,ix,1,3); //water
-					n |= check_neighbors4(city,iy,ix,0x30,0x31); //bridge
-
-					if (improve_flags & 4) {
-
-						n = check_neighbors(city,iy,ix,1,3); //water
-						n |= check_neighbors(city,iy,ix,0x30,0x31); //bridge
-
-						city[iy*CITYWIDTH+ix] = (improve4(n) >= 4) ? alttile + improve4(n) : improve4(n);
-
-
-					}
-
-					else if (improve_flags & 2) {
-
-						if (n == N_S) city[iy*CITYWIDTH+ix] = alttile + 0x5; //N
-						if (n == N_W) city[iy*CITYWIDTH+ix] = alttile + 0x8; //E
-						if (n == N_E) city[iy*CITYWIDTH+ix] = alttile + 0x7; //W
-						if (n == N_N) city[iy*CITYWIDTH+ix] = alttile + 0xA; //S
-
-						if (n == (N_S | N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x4; //NW
-						if (n == (N_S | N_W)) city[iy*CITYWIDTH+ix] = alttile + 0x6; //NE
-						if (n == (N_N | N_W)) city[iy*CITYWIDTH+ix] = alttile + 0xB; //SE
-						if (n == (N_N | N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x9; //SW
-
-						if (n == (N_W | N_S | N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x5; //N
-						if (n == (N_N | N_S | N_W)) city[iy*CITYWIDTH+ix] = alttile + 0x8; //E
-						if (n == (N_N | N_E | N_S)) city[iy*CITYWIDTH+ix] = alttile + 0x7; //W
-						if (n == (N_N | N_E | N_W)) city[iy*CITYWIDTH+ix] = alttile + 0xa; //S
-
-					} else {
-
-						if ((~n & N_W) && (n & N_S) && (~n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x4; //NW
-						if ((n & N_W) && (n & N_S) && (~n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x5; //N
-						if ((n & N_W) && (n & N_S) && (~n & N_N) && (~n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x6; //NE
-						if ((n & N_W) && (n & N_S) && (n & N_N) && (~n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x8; //E
-						if ((n & N_W) && (~n & N_S) && (n & N_N) && (~n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0xB; //SE
-						if ((n & N_W) && (~n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0xA; //S
-						if ((~n & N_W) && (~n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x9; //SW
-						if ((~n & N_W) && (n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x7; //W
-					}
-				}
+				} else city_water_spread(city,ix,iy,v,improve_flags);
 
 			} else if ((v >= 0x04) && (v <= 0x13)) {
 

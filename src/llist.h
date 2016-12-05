@@ -17,7 +17,7 @@ int llist_ ## type ## _push (struct llist_ ## type *list, type value) { \
 		struct llist_ ## type *tail = list; \
 		while (tail->next != 0) tail = tail->next; \
 		struct llist_ ## type *newitem = malloc(sizeof(struct llist_ ## type)); \
-		if (newitem == 0) { printf("Unable to allocate memory for new queue item.\n"); exit(1); } \
+		if (newitem == 0) { return 1; } \
 		newitem->exists = 1; newitem->value = value; newitem->next = 0; \
 		tail->next = newitem; \
 		return 0; \
