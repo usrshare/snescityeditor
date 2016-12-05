@@ -2,12 +2,13 @@
 #include <limits.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdbool.h>
 
 #include "defines.h"
 #include "snescity.h"
 #include "pngmap.h"
 #include "sdl_ui.h"
-
+#include "llist.h"
 
 char city_fname[PATH_MAX], map_fname[PATH_MAX];
 
@@ -262,6 +263,77 @@ void drawcity(int16_t sx, int16_t sy) {
 
 }
 
+struct _citycoord {
+	uint8_t x;
+	uint8_t y;
+};
+
+typedef struct _citycoord citycoord;
+
+LLIST_DECLARE(citycoord);
+
+bool tile_water(uint8_t x, uint8_t y) {
+	if ( (x >= CITYWIDTH) || (y >= CITYHEIGHT) ) return false;
+	uint16_t tile = citytiles[y * CITYWIDTH + x];
+	if ((tile >= 1) && (tile <= 0x13)) return true;
+	return false;
+}
+
+uint16_t add_water(uint16_t c1, uint16_t c2) {
+
+	if (c1 == 0) return c2; if (c2 == 0) return c1;
+	if ((c1 >= 1) || (c1 <= 3)) return c1;
+	if ((c2 >= 1) || (c2 <= 3)) return c2;
+}
+
+void edit_spreadwater(uint8_t x, uint8_t y) {
+
+	//citytiles[y * CITYWIDTH + x] = 1;
+
+	LLIST_NEW(citycoord, queue);
+
+	if (y>0) {
+		if (x>0) llist_citycoord_push(&queue, (citycoord){x-1,y-1}); 
+		llist_citycoord_push(&queue, (citycoord){x,y-1});
+		if (x<(CITYWIDTH-1)) llist_citycoord_push(&queue, (citycoord){x+1,y-1});
+	}
+
+	if (x>0) llist_citycoord_push(&queue, (citycoord){x-1,y});
+	if (x<(CITYWIDTH-1)) llist_citycoord_push(&queue, (citycoord){x+1,y});
+
+	if (y < (CITYHEIGHT-1)) {
+		llist_citycoord_push(&queue, (citycoord){x-1,y+1});
+		llist_citycoord_push(&queue, (citycoord){x,y+1});
+		llist_citycoord_push(&queue, (citycoord){x+1,y+1});
+	}
+
+	citycoord n;
+	while (LLIST_EXISTS(queue)) {
+
+		n = LLIST_POP(citycoord,queue);
+
+		uint16_t tile = citytiles[n.y * CITYWIDTH + n.x];
+
+		if (!((tile >= 1) && (tile <= 3)))
+			city_water_spread(citytiles,n.x,n.y, tile, smoothmode ? 44 : 40);
+
+		if (citytiles[n.y * CITYWIDTH + n.x] != tile) {
+
+			if (tile_water(x-1,y-1)) llist_citycoord_push(&queue,(citycoord){x-1,y-1});
+			if (tile_water(x,y-1)) llist_citycoord_push(&queue,(citycoord){x,y-1});
+			if (tile_water(x+1,y-1)) llist_citycoord_push(&queue,(citycoord){x+1,y-1});
+			
+			if (tile_water(x-1,y)) llist_citycoord_push(&queue,(citycoord){x-1,y});
+			if (tile_water(x+1,y)) llist_citycoord_push(&queue,(citycoord){x+1,y});
+			
+			if (tile_water(x-1,y+1)) llist_citycoord_push(&queue,(citycoord){x-1,y+1});
+			if (tile_water(x,y+1)) llist_citycoord_push(&queue,(citycoord){x,y+1});
+			if (tile_water(x+1,y+1)) llist_citycoord_push(&queue,(citycoord){x+1,y+1});
+		}
+
+	}
+}
+
 void ui_updatefunc(void) {
 
 	//fillrect(0,192,0,64,16);
@@ -377,7 +449,7 @@ void ui_updatefunc(void) {
 
 					uint8_t citytop = tilepalette ? 32 : 16;
 					uint8_t cityhgt = tilepalette ? 192 : 208;
-					
+
 					if (tilepalette) {
 
 						fillspr(1,0,8,32,1);
@@ -435,6 +507,10 @@ void ui_updatefunc(void) {
 							curtile = tilelist[tilenum];
 
 						}
+						if (click(24,4,PWIDTH*8,24,1)) {
+
+							tilepalette = 0;
+						}
 #undef PWIDTH
 						if (editbutton(41,240,0)) tilepalette = 0;
 
@@ -452,6 +528,7 @@ void ui_updatefunc(void) {
 						if (editbutton(81,128,0)) brushtype = BT_PICKER; //tile picker
 						editbutton(82,144,0); //undo?
 
+						if (editbutton(57,192,0)) { transform_city = 1; sdl_ui_mode = UI_OPTIONS; } //options
 						if (editbutton(83,208,0)) sdl_ui_mode = UI_MAINMENU; //load
 						if (editbutton(84,224,0)) sdl_ui_mode = UI_SAVEMENU; //save
 
@@ -479,13 +556,14 @@ void ui_updatefunc(void) {
 						if ((tilepos_x >= 0) && (tilepos_x < CITYWIDTH) && (tilepos_y >= 0) && (tilepos_y < CITYHEIGHT)) {
 
 							switch (brushtype) {
-								case BT_EMPTY: citytiles[CITYWIDTH * tilepos_y + tilepos_x] = 0; break;
-								case BT_WATER: citytiles[CITYWIDTH * tilepos_y + tilepos_x] = 1; break;
+								case BT_EMPTY: citytiles[CITYWIDTH * tilepos_y + tilepos_x] = 0; edit_spreadwater(tilepos_x,tilepos_y); break;
+								case BT_WATER: citytiles[CITYWIDTH * tilepos_y + tilepos_x] = 1; edit_spreadwater(tilepos_x,tilepos_y); break;
 								case BT_WATERSHIP: citytiles[CITYWIDTH * tilepos_y + tilepos_x] = 3; break;
 								case BT_WATERCOAST: citytiles[CITYWIDTH * tilepos_y + tilepos_x] = 2; break;
 
-								case BT_FOREST: citytiles[CITYWIDTH*tilepos_y + tilepos_x] = 14; break;
-								case BT_ROAD: citytiles[CITYWIDTH*tilepos_y + tilepos_x] = 32; break;
+								case BT_FOREST: citytiles[CITYWIDTH*tilepos_y + tilepos_x] = 0x14; break;
+								case BT_ROAD: citytiles[CITYWIDTH*tilepos_y + tilepos_x] = 0x32; break;
+								case BT_RAIL: citytiles[CITYWIDTH*tilepos_y + tilepos_x] = 0x72; break;
 
 								case BT_TILE: citytiles[CITYWIDTH*tilepos_y + tilepos_x] = curtile; break;	      
 
@@ -611,8 +689,6 @@ void ui_updatefunc(void) {
 
 					 s_addstr_c("success.",112,0);
 
-					 s_addstr_c("close the window to exit.",128,0);
-
 					 if (button(58,"BACK",176,184,7)) sdl_ui_mode = UI_MAINMENU;
 					 // operation successful
 					 break; }
@@ -623,9 +699,6 @@ void ui_updatefunc(void) {
 				       s_addstr_c("error.",112,0);
 
 				       s_addstr_c(city_lasterror,136,0);
-
-
-				       s_addstr_c("close the window to exit.",160,0);
 
 				       if (button(58,"BACK",176,184,7)) sdl_ui_mode = UI_MAINMENU;
 				       // error
