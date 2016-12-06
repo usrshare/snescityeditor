@@ -362,7 +362,7 @@ void edit_spreadwater(uint8_t x, uint8_t y) {
 		if (!((tile >= 1) && (tile <= 3)))
 			city_water_spread(citytiles,n.x,n.y, tile, smoothmode ? 12 : 8);
 
-		if (tile_equal(citytiles[n.y * CITYWIDTH + n.x],tile)) {
+		if (!tile_equal(citytiles[n.y * CITYWIDTH + n.x],tile)) {
 
 			if (tile_water(x,y-1)) llist_citycoord_push(&queue,(citycoord){x,y-1});
 			if (tile_water(x-1,y)) llist_citycoord_push(&queue,(citycoord){x-1,y});
