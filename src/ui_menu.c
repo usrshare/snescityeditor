@@ -278,12 +278,62 @@ bool tile_water(uint8_t x, uint8_t y) {
 	if ((tile >= 1) && (tile <= 0x13)) return true;
 	return false;
 }
+bool tile_road(uint8_t x, uint8_t y) {
+	if ( (x >= CITYWIDTH) || (y >= CITYHEIGHT) ) return false;
+	uint16_t tile = citytiles[y * CITYWIDTH + x];
+	if ((tile >= 0x32) && (tile <= 0x3c)) return true;
+	return false;
+}
+
+bool tile_rail(uint8_t x, uint8_t y) {
+	if ( (x >= CITYWIDTH) || (y >= CITYHEIGHT) ) return false;
+	uint16_t tile = citytiles[y * CITYWIDTH + x];
+	if ((tile >= 0x72) && (tile <= 0x7c)) return true;
+	return false;
+}
 
 uint16_t add_water(uint16_t c1, uint16_t c2) {
 
 	if (c1 == 0) return c2; if (c2 == 0) return c1;
 	if ((c1 >= 1) || (c1 <= 3)) return c1;
 	if ((c2 >= 1) || (c2 <= 3)) return c2;
+}
+
+uint16_t tile_equality[] = {
+	0x00,0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0a,0x0b,0x04,0x05,0x06,0x07,
+	0x08,0x09,0x0a,0x0b,0x14,0x15,0x16,0x17,0x18,0x19,0x1a,0x1b,0x1c,0x14,0x15,0x16,
+	0x17,0x18,0x19,0x1a,0x1b,0x1c,0x26,0x27};
+
+#define EQTILE_CNT (sizeof(tile_equality) / sizeof(*tile_equality))
+
+bool tile_equal(uint16_t t1, uint16_t t2) {
+
+	//compares two tiles, considering alternate water/forests equal to regular ones
+	if ((t1 >= EQTILE_CNT) || (t2 >= EQTILE_CNT)) return (t1 == t2);
+	return (tile_equality[t1] == tile_equality[t2]); 
+
+}
+
+void edit_spreadroad(uint8_t x, uint8_t y) {
+
+	put_proper_road(citytiles,x,y);
+			
+	if (tile_road(x,y-1)) put_proper_road(citytiles,x,y-1); 
+	if (tile_road(x-1,y)) put_proper_road(citytiles,x-1,y); 
+	if (tile_road(x+1,y)) put_proper_road(citytiles,x+1,y); 
+	if (tile_road(x,y+1)) put_proper_road(citytiles,x,y+1); 
+
+}
+
+void edit_spreadrail(uint8_t x, uint8_t y) {
+
+	put_proper_rail(citytiles,x,y);
+	
+	if (tile_rail(x,y-1)) put_proper_rail(citytiles,x,y-1); 
+	if (tile_rail(x-1,y)) put_proper_rail(citytiles,x-1,y); 
+	if (tile_rail(x+1,y)) put_proper_rail(citytiles,x+1,y); 
+	if (tile_rail(x,y+1)) put_proper_rail(citytiles,x,y+1); 
+	
 }
 
 void edit_spreadwater(uint8_t x, uint8_t y) {
@@ -310,19 +360,18 @@ void edit_spreadwater(uint8_t x, uint8_t y) {
 		uint16_t tile = citytiles[n.y * CITYWIDTH + n.x];
 
 		if (!((tile >= 1) && (tile <= 3)))
-			city_water_spread(citytiles,n.x,n.y, tile, smoothmode ? 44 : 40);
+			city_water_spread(citytiles,n.x,n.y, tile, smoothmode ? 12 : 8);
 
-		if (citytiles[n.y * CITYWIDTH + n.x] != tile) {
+		if (tile_equal(citytiles[n.y * CITYWIDTH + n.x],tile)) {
 
-			if (tile_water(x-1,y-1)) llist_citycoord_push(&queue,(citycoord){x-1,y-1});
 			if (tile_water(x,y-1)) llist_citycoord_push(&queue,(citycoord){x,y-1});
-			if (tile_water(x+1,y-1)) llist_citycoord_push(&queue,(citycoord){x+1,y-1});
-
 			if (tile_water(x-1,y)) llist_citycoord_push(&queue,(citycoord){x-1,y});
 			if (tile_water(x+1,y)) llist_citycoord_push(&queue,(citycoord){x+1,y});
-
-			if (tile_water(x-1,y+1)) llist_citycoord_push(&queue,(citycoord){x-1,y+1});
 			if (tile_water(x,y+1)) llist_citycoord_push(&queue,(citycoord){x,y+1});
+			
+			if (tile_water(x-1,y-1)) llist_citycoord_push(&queue,(citycoord){x-1,y-1});
+			if (tile_water(x+1,y-1)) llist_citycoord_push(&queue,(citycoord){x+1,y-1});
+			if (tile_water(x-1,y+1)) llist_citycoord_push(&queue,(citycoord){x-1,y+1});
 			if (tile_water(x+1,y+1)) llist_citycoord_push(&queue,(citycoord){x+1,y+1});
 		}
 
@@ -557,8 +606,8 @@ void ui_updatefunc(void) {
 								case BT_WATERCOAST: citytiles[CITYWIDTH * tilepos_y + tilepos_x] = 2; break;
 
 								case BT_FOREST: citytiles[CITYWIDTH*tilepos_y + tilepos_x] = 0x14; break;
-								case BT_ROAD: citytiles[CITYWIDTH*tilepos_y + tilepos_x] = 0x32; break;
-								case BT_RAIL: citytiles[CITYWIDTH*tilepos_y + tilepos_x] = 0x72; break;
+								case BT_ROAD: citytiles[CITYWIDTH*tilepos_y + tilepos_x] = 0x32; edit_spreadroad(tilepos_x,tilepos_y); break;
+								case BT_RAIL: citytiles[CITYWIDTH*tilepos_y + tilepos_x] = 0x72; edit_spreadrail(tilepos_x,tilepos_y); break;
 
 								case BT_TILE: citytiles[CITYWIDTH*tilepos_y + tilepos_x] = curtile; break;	      
 

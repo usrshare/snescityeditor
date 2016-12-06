@@ -22,5 +22,7 @@ int describe_cities (const char* sfname, char* city1, char* city2);
 
 int city_water_fix (uint16_t* city, uint8_t ix, uint8_t iy, uint16_t v, int improve_flags);
 int city_water_spread( uint16_t* city, uint8_t ix, uint8_t iy, uint16_t v, int improve_flags);
+void put_proper_road(uint16_t* city, uint8_t ix, uint8_t iy);
+void put_proper_rail(uint16_t* city, uint8_t ix, uint8_t iy);
 
 #endif
