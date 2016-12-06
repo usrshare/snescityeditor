@@ -592,7 +592,7 @@ int city_water_spread( uint16_t* city, uint8_t ix, uint8_t iy, uint16_t v, int i
 
 void put_proper_road(uint16_t* city, uint8_t ix, uint8_t iy) {
 
-	int n = check_neighbors4(city,iy,ix,0x30,0x3C); //roads
+	int n = check_neighbors4(city,iy,ix,0x30,0x3E); //roads + road with power
 	n |= check_neighbors4(city,iy,ix,0x7d,0x7e); //road+rail combo 
 
 	switch(n) {
