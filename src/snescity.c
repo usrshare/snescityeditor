@@ -590,6 +590,61 @@ int city_water_spread( uint16_t* city, uint8_t ix, uint8_t iy, uint16_t v, int i
 	}
 }
 
+void put_proper_road(uint16_t* city, uint8_t ix, uint8_t iy) {
+
+	int n = check_neighbors4(city,iy,ix,0x30,0x3C); //roads
+	n |= check_neighbors4(city,iy,ix,0x7d,0x7e); //road+rail combo 
+
+	switch(n) {
+		case  0:
+		case  2:
+		case  8:
+		case 10: city[iy*CITYWIDTH+ix] = 0x32; break;
+
+		case  1:
+		case  4:
+		case  5: city[iy*CITYWIDTH+ix] = 0x33; break;
+
+		case  6: city[iy*CITYWIDTH+ix] = 0x35; break;
+		case  3: city[iy*CITYWIDTH+ix] = 0x34; break;
+		case 12: city[iy*CITYWIDTH+ix] = 0x36; break;
+		case  9: city[iy*CITYWIDTH+ix] = 0x37; break;
+
+		case 11: city[iy*CITYWIDTH+ix] = 0x38; break;
+		case  7: city[iy*CITYWIDTH+ix] = 0x39; break;
+		case 13: city[iy*CITYWIDTH+ix] = 0x3B; break;
+		case 14: city[iy*CITYWIDTH+ix] = 0x3A; break;
+		case 15: city[iy*CITYWIDTH+ix] = 0x3C; break; 
+	}
+}
+
+void put_proper_rail(uint16_t* city, uint8_t ix, uint8_t iy) {
+
+	int n = check_neighbors4(city,iy,ix,0x70,0x7E); //roads
+
+	switch(n) {
+		case  0:
+		case  2:
+		case  8:
+		case 10: city[iy*CITYWIDTH+ix] = 0x72; break;
+
+		case  1:
+		case  4:
+		case  5: city[iy*CITYWIDTH+ix] = 0x73; break;
+
+		case  6: city[iy*CITYWIDTH+ix] = 0x75; break;
+		case  3: city[iy*CITYWIDTH+ix] = 0x74; break;
+		case 12: city[iy*CITYWIDTH+ix] = 0x76; break;
+		case  9: city[iy*CITYWIDTH+ix] = 0x77; break;
+
+		case 11: city[iy*CITYWIDTH+ix] = 0x78; break;
+		case  7: city[iy*CITYWIDTH+ix] = 0x79; break;
+		case 13: city[iy*CITYWIDTH+ix] = 0x7B; break;
+		case 14: city[iy*CITYWIDTH+ix] = 0x7A; break;
+		case 15: city[iy*CITYWIDTH+ix] = 0x7C; break; 
+	}
+}
+
 int city_improve (uint16_t* city, int improve_flags) {
 
 	//this option makes the map look better.
