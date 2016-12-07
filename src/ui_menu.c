@@ -667,7 +667,6 @@ void ui_updatefunc(void) {
 
 						if (editbutton(smoothmode ? 69 : 68,112,0)) smoothmode = !smoothmode; //smooth mode
 						if (editbutton(81,128,0)) brushtype = BT_PICKER; //tile picker
-						editbutton(82,144,0); //undo?
 
 						if (editbutton(57,192,0)) { transform_city = 1; sdl_ui_mode = UI_OPTIONS; } //options
 						if (editbutton(83,208,0)) sdl_ui_mode = UI_MAINMENU; //load
