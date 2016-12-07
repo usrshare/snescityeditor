@@ -451,26 +451,40 @@ uint16_t improve4(int n) {
 
 	switch(n) {
 
+		case N_NW | N_W | N_S | N_SE:
+		case N_NW | N_W | N_SW | N_S | N_SE:
+		case N_NE | N_E | N_S | N_SW:
+		case N_NE | N_E | N_SE | N_S | N_SW:
+		case N_SW | N_W | N_N | N_NE:
+		case N_SW | N_W | N_NW | N_N | N_NE:
+		case N_SE | N_E | N_N | N_NW:
+		case N_SE | N_E | N_NE | N_N | N_NW:
+			return 0x2; //water
+
 		case N_E | N_SE:
 		case N_S | N_SE:
+		case N_S | N_E:
 		case N_S | N_SE | N_E: 
 		case N_S | N_SE | N_E | N_NW:
-		case N_SW | N_S | N_SE | N_E | N_NE:
 			return 0x4; //northwestern shore
 
 		case N_W | N_SW | N_S | N_SE:
 		case N_W | N_SW | N_S | N_SE | N_E:
 		case N_W | N_SW | N_S | N_SE | N_E | N_NW:
 		case N_W | N_SW | N_S | N_SE | N_E | N_NE:
+		case N_W | N_SW | N_S | N_E | N_NE:
 		case N_SW | N_S | N_SE | N_E:
 		case N_SW | N_S | N_SE:
+		case N_SW | N_S | N_E:
+		case N_W | N_S | N_SE:
+		case N_W | N_S | N_SE | N_E | N_NW:
 			return 0x5; //northern shore
 
 		case N_SW | N_W:
 		case N_SW | N_S:
+		case N_S | N_W:
 		case N_W | N_SW | N_S:
 		case N_S | N_SW | N_W | N_NE:
-		case N_NW | N_W | N_SW | N_S | N_SE:
 			return 0x6; //northeastern shore
 
 		case N_NW | N_W | N_S:
@@ -485,24 +499,27 @@ uint16_t improve4(int n) {
 
 		case N_NW | N_W:
 		case N_NW | N_N: 
+		case N_N | N_W:
 		case N_N | N_NW | N_W: 
 		case N_N | N_NW | N_W | N_SE:
-		case N_NE | N_N | N_NW | N_W | N_SW: 
 			return 0xB; //southeastern shore
 
 		case N_W | N_NW | N_N | N_NE:
 		case N_W | N_NW | N_N | N_NE | N_E:
 		case N_W | N_NW | N_N | N_NE | N_E | N_SW:
 		case N_W | N_NW | N_N | N_NE | N_E | N_SE:
+		case N_W | N_NW | N_N | N_E | N_SE:
 		case N_NW | N_N | N_NE | N_E:
 		case N_NW | N_N | N_NE: 
+		case N_NW | N_N | N_E:
+		case N_W | N_N | N_NE:
 			return 0xA; //southern shore
 
 		case N_NE | N_E:	
 		case N_N | N_NE:
+		case N_N | N_E:
 		case N_N | N_NE | N_E: 
 		case N_N | N_NE | N_E | N_SW:
-		case N_NW | N_N | N_NE | N_E | N_SE: 
 			return 0x9; //southwestern shore	
 
 		case N_NE | N_E | N_S:
@@ -645,6 +662,28 @@ void put_proper_rail(uint16_t* city, uint8_t ix, uint8_t iy) {
 	}
 }
 
+void city_fix_forests (uint16_t* city, uint8_t ix, uint8_t iy) {
+
+	int alttile = ( rand() & 1 ) ? 9 : 0; //use alternative tile?
+
+	int n = check_neighbors4(city,iy,ix,0x14,0x25); //forest
+
+	if (n==0) city[iy*CITYWIDTH+ix] = 0x14;
+
+	if ((n == N_W) || (n == N_S) || (n == N_N) || (n == N_E)) city[iy*CITYWIDTH+ix] = 0x14;
+
+	if ((n & N_W) && (n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x18; //water
+
+	if ((~n & N_W) && (n & N_S) && (~n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x14; //NW
+	if ((n & N_W) && (n & N_S) && (~n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x15; //N
+	if ((n & N_W) && (n & N_S) && (~n & N_N) && (~n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x16; //NE
+	if ((n & N_W) && (n & N_S) && (n & N_N) && (~n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x19; //E
+	if ((n & N_W) && (~n & N_S) && (n & N_N) && (~n & N_E)) city[iy*CITYWIDTH+ix] = 0x1C; //SE
+	if ((n & N_W) && (~n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x1B; //S
+	if ((~n & N_W) && (~n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x1A; //SW
+	if ((~n & N_W) && (n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x17; //W
+}
+
 int city_improve (uint16_t* city, int improve_flags) {
 
 	//this option makes the map look better.
@@ -704,25 +743,8 @@ int city_improve (uint16_t* city, int improve_flags) {
 			if ((v >= 0x14) && (v <= 0x25)) {
 
 				// next step: proper forests.
+				city_fix_forests (city, ix, iy);
 
-				int alttile = ( rand() & 1 ) ? 9 : 0; //use alternative tile?
-
-				int n = check_neighbors4(city,iy,ix,0x14,0x25); //forest
-
-				if (n==0) city[iy*CITYWIDTH+ix] = 0x14;
-
-				if ((n == N_W) || (n == N_S) || (n == N_N) || (n == N_E)) city[iy*CITYWIDTH+ix] = 0x14;
-
-				if ((n & N_W) && (n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x18; //water
-
-				if ((~n & N_W) && (n & N_S) && (~n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x14; //NW
-				if ((n & N_W) && (n & N_S) && (~n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x15; //N
-				if ((n & N_W) && (n & N_S) && (~n & N_N) && (~n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x16; //NE
-				if ((n & N_W) && (n & N_S) && (n & N_N) && (~n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x19; //E
-				if ((n & N_W) && (~n & N_S) && (n & N_N) && (~n & N_E)) city[iy*CITYWIDTH+ix] = 0x1C; //SE
-				if ((n & N_W) && (~n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x1B; //S
-				if ((~n & N_W) && (~n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x1A; //SW
-				if ((~n & N_W) && (n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x17; //W
 
 			} else if ((v >= 0x30) && (v <= 0x31)) {
 
@@ -737,29 +759,7 @@ int city_improve (uint16_t* city, int improve_flags) {
 
 				//this fixes regular roads.
 
-				int n = check_neighbors4(city,iy,ix,0x30,0x3C); //roads
-
-				switch(n) {
-					case  0:
-					case  2:
-					case  8:
-					case 10: city[iy*CITYWIDTH+ix] = 0x32; break;
-
-					case  1:
-					case  4:
-					case  5: city[iy*CITYWIDTH+ix] = 0x33; break;
-
-					case  6: city[iy*CITYWIDTH+ix] = 0x35; break;
-					case  3: city[iy*CITYWIDTH+ix] = 0x34; break;
-					case 12: city[iy*CITYWIDTH+ix] = 0x36; break;
-					case  9: city[iy*CITYWIDTH+ix] = 0x37; break;
-
-					case 11: city[iy*CITYWIDTH+ix] = 0x38; break;
-					case  7: city[iy*CITYWIDTH+ix] = 0x39; break;
-					case 13: city[iy*CITYWIDTH+ix] = 0x3B; break;
-					case 14: city[iy*CITYWIDTH+ix] = 0x3A; break;
-					case 15: city[iy*CITYWIDTH+ix] = 0x3C; break; 
-				}
+				put_proper_road(city,ix,iy);
 			}
 		}
 	}	
