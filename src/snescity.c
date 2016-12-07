@@ -473,6 +473,8 @@ uint16_t improve4(int n) {
 		case N_W | N_SW | N_S | N_SE | N_E | N_NW:
 		case N_W | N_SW | N_S | N_SE | N_E | N_NE:
 		case N_W | N_SW | N_S | N_E | N_NE:
+		case N_SW | N_S | N_SE | N_NW:
+		case N_SW | N_S | N_SE | N_NE:
 		case N_SW | N_S | N_SE | N_E:
 		case N_SW | N_S | N_SE:
 		case N_SW | N_S | N_E:
@@ -495,6 +497,8 @@ uint16_t improve4(int n) {
 		case N_N | N_NW | N_W | N_SW | N_S | N_NE:
 		case N_N | N_NW | N_W | N_SW | N_S | N_SE:
 		case N_NW | N_W | N_SW | N_S:
+		case N_NW | N_W | N_SW | N_SE: 
+		case N_NW | N_W | N_SW | N_NE: 
 		case N_NW | N_W | N_SW: 
 		case N_W | N_S | N_N:
 			return 0x8; //eastern shore
@@ -512,6 +516,8 @@ uint16_t improve4(int n) {
 		case N_W | N_NW | N_N | N_NE | N_E | N_SE:
 		case N_W | N_NW | N_N | N_E | N_SE:
 		case N_NW | N_N | N_NE | N_E:
+		case N_NW | N_N | N_NE | N_SW:
+		case N_NW | N_N | N_NE | N_SE:
 		case N_NW | N_N | N_NE: 
 		case N_NW | N_N | N_E:
 		case N_W | N_N | N_NE:
@@ -532,6 +538,8 @@ uint16_t improve4(int n) {
 		case N_N | N_NE | N_E | N_SE | N_S | N_NW:
 		case N_N | N_NE | N_E | N_SE | N_S | N_SW:
 		case N_NE | N_E | N_SE | N_S:
+		case N_NE | N_E | N_SE | N_SW:
+		case N_NE | N_E | N_SE | N_NW:
 		case N_NE | N_E | N_SE: 
 		case N_N | N_S | N_E:
 			return 0x7; //western shore
