@@ -343,19 +343,13 @@ void edit_spreadrail(uint8_t x, uint8_t y) {
 
 }
 
-void edit_spreadfix(uint8_t x, uint8_t y) {
+void edit_spreadfix2(int8_t x, int8_t y, int8_t w, int8_t h) {
 
 	LLIST_NEW(citycoord, queue);
 
-	if (y>0) llist_citycoord_push(&queue, (citycoord){x,y-1}); //N
-	if (x>0) llist_citycoord_push(&queue, (citycoord){x-1,y}); //W
-	if (x<(CITYWIDTH-1)) llist_citycoord_push(&queue, (citycoord){x+1,y}); //E
-	if (y < (CITYHEIGHT-1)) llist_citycoord_push(&queue, (citycoord){x,y+1}); //S
-
-	if ((y>0) && (x>0)) llist_citycoord_push(&queue, (citycoord){x-1,y-1}); //NW
-	if ((y>0) && (x<(CITYWIDTH-1))) llist_citycoord_push(&queue, (citycoord){x+1,y-1}); //NE
-	if ((y < (CITYHEIGHT-1)) && (x>0)) llist_citycoord_push(&queue, (citycoord){x-1,y+1}); //SW
-	if ((y < (CITYHEIGHT-1)) && (x < (CITYWIDTH-1)) ) llist_citycoord_push(&queue, (citycoord){x+1,y+1}); //SE
+	for (int8_t iy = 0; iy < h; iy++)
+		for (int8_t ix = 0; ix < w; ix++)
+			if (vtile(x+ix,y+iy)) llist_citycoord_push(&queue, (citycoord){x+ix,y+iy});
 
 	citycoord n;
 	while (LLIST_EXISTS(queue)) {
@@ -372,18 +366,22 @@ void edit_spreadfix(uint8_t x, uint8_t y) {
 
 		if (!tile_equal(citytiles[n.y * CITYWIDTH + n.x],tile)) {
 
-			llist_citycoord_push(&queue,(citycoord){x,y-1});
-			llist_citycoord_push(&queue,(citycoord){x-1,y});
-			llist_citycoord_push(&queue,(citycoord){x+1,y});
-			llist_citycoord_push(&queue,(citycoord){x,y+1});
-
-			llist_citycoord_push(&queue,(citycoord){x-1,y-1});
-			llist_citycoord_push(&queue,(citycoord){x+1,y-1});
-			llist_citycoord_push(&queue,(citycoord){x-1,y+1});
-			llist_citycoord_push(&queue,(citycoord){x+1,y+1});
+			if (vtile(x,y-1)) llist_citycoord_push(&queue,(citycoord){x,y-1});
+			if (vtile(x-1,y)) llist_citycoord_push(&queue,(citycoord){x-1,y});
+			if (vtile(x+1,y)) llist_citycoord_push(&queue,(citycoord){x+1,y});
+			if (vtile(x,y+1)) llist_citycoord_push(&queue,(citycoord){x,y+1});
+                        
+			if (vtile(x-1,y-1)) llist_citycoord_push(&queue,(citycoord){x-1,y-1});
+			if (vtile(x+1,y-1)) llist_citycoord_push(&queue,(citycoord){x+1,y-1});
+			if (vtile(x-1,y+1)) llist_citycoord_push(&queue,(citycoord){x-1,y+1});
+			if (vtile(x+1,y+1)) llist_citycoord_push(&queue,(citycoord){x+1,y+1});
 		}
 
 	}
+}
+
+void edit_spreadfix(uint8_t x, uint8_t y) {
+	return edit_spreadfix2(x-1,y-1,3,3);
 }
 
 typedef int (*line_cb)(uint16_t* map, uint8_t x, uint8_t y, void* param);
@@ -711,7 +709,7 @@ void ui_updatefunc(void) {
 											if ( (tilepos_x < (CITYWIDTH-1)) && (tilepos_y < (CITYHEIGHT-1)) && (citytiles[CITYWIDTH*(tilepos_y+1) + (tilepos_x+1)] == 0) ) citytiles[CITYWIDTH*(tilepos_y+1) + (tilepos_x+1)] = 0x14;
 										}
 										city_fix_forests(citytiles,tilepos_x,tilepos_y);
-										edit_spreadfix(tilepos_x,tilepos_y); break;
+										edit_spreadfix2(tilepos_x-1,tilepos_y-1,smoothmode ? 4 : 3, smoothmode ? 4 : 3); break;
 
 								case BT_ROAD: citytiles[CITYWIDTH*tilepos_y + tilepos_x] = 0x32; edit_spreadroad(tilepos_x,tilepos_y); break;
 								case BT_RAIL: citytiles[CITYWIDTH*tilepos_y + tilepos_x] = 0x72; edit_spreadrail(tilepos_x,tilepos_y); break;

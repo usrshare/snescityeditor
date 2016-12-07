@@ -364,7 +364,7 @@ int city2png (const char* sfname, const char* mfname, int citynum) {
 
 	fclose(cityfile);
 }
-int vtile(int y, int x) { return ( (y > 0) && (y < (CITYHEIGHT-1)) && (x > 0) && (x < (CITYWIDTH-1)) ); }
+int vtile(int x, int y) { return ( (y >= 0) && (y < CITYHEIGHT) && (x >= 0) && (x < CITYWIDTH) ); }
 
 enum neighbors {
 	N_X = 0,
