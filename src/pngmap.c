@@ -48,14 +48,14 @@ uint32_t pngcolors[] = {
 	0x017C01, //25 forest alt SE
 	0x20C020, //26 park
 	0x20A020, //27 park with tree?
-	0xE08000, //28 polluted 1
-	0xE88808, //29 polluted 2
+	0xE08000, //28 polluted 1 (loads as rubbish)
+	0xE88808, //29 polluted 2 (loads as rubbish)
 	0xeeee00, //2a explosion 1
 	0xf0f000, //2b explosion 2
 	0xf4f400, //2c explosion 3
 	0xf8f800, //2d explosion 4
-	0x00f8f8, //2e weird 1
-	0x00fcfc, //2f weird 2
+	0x00f8f8, //2e weird 1 (undemolishable)
+	0x00fcfc, //2f weird 2 (undemolishable)
 	0x424e6e, //30 horiz bridge
 	0x434f6f, //31 vert bridge
 	0x5b5b5b, //32 horiz road
@@ -71,7 +71,7 @@ uint32_t pngcolors[] = {
 	0x656565, //3c 4-way crossing
 	0x666666, //3d horiz road w/ power
 	0x676767, //3e vert road w/ power
-	0x686868, //3f unknown tile.
+	0x686868, //3f unknown tile. (looks same as weird tiles, but demolishable?)
 	0x424e6e, //40 road+traffic 1
 	0x434f6f, //41 road+traffic 2
 	0x5b5b5b, //42 road+traffic 3
@@ -103,7 +103,39 @@ uint32_t pngcolors[] = {
 	0x656565, //5c road+more traffic 13
 	0x666666, //5d road+more traffic 14
 	0x676767, //5e road+more traffic 15
-	0x686868, //5f road+more traffic 16 
+	0x686868, //5f road+more traffic 16
+        0xedd400, //60 power line bridge H
+	0xedd401, //61 power line bridge V	
+        0xedd402, //62 horiz power line
+	0xedd403, //63 vert power line
+        0xedd404, //64 power N-E turn
+	0xedd405, //65 power S-E turn
+        0xedd406, //66 power S-W turn
+	0xedd407, //67 power N-W turn
+        0xedd408, //68 power W-N-E crossing
+	0xedd409, //69 power N-E-S crossing
+        0xedd40a, //6a power W-S-E crossing
+	0xedd40b, //6b power N-W-S crossing
+        0xedd40c, //6c power 4-way crossing
+	0xedd40d, //6d rail H / power V
+        0xedd40e, //6e rail V / power H
+	0xedd40f, //6f weird tile (demolishable)
+        0x8f5900, //70 rail bridge H
+	0x8f5901, //71 rail bridge V	
+        0x8f5902, //72 horiz rail
+	0x8f5903, //73 vert rail
+        0x8f5904, //74 rail N-E turn
+	0x8f5905, //75 rail S-E turn
+        0x8f5906, //76 rail S-W turn
+	0x8f5907, //77 rail N-W turn
+        0x8f5908, //78 rail W-N-E crossing
+	0x8f5909, //79 rail N-E-S crossing
+        0x8f590a, //7a rail W-S-E crossing
+	0x8f590b, //7b rail N-W-S crossing
+        0x8f590c, //7c rail 4-way crossing
+	0x8f590d, //7d rail H / road V
+        0x8f590e, //7e rail V / road H
+	0x8f590f, //7f tile on fire
 };
 
 const size_t pngcolor_c = sizeof(pngcolors) / sizeof(*pngcolors);
