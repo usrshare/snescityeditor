@@ -19,6 +19,7 @@ int city2png (const char* sfname, const char* mfname, int citynum);
 int fixsram (const char* sfname);
 
 int describe_cities (const char* sfname, char* city1, char* city2); 
+int vtile(int x, int y);
 
 int city_water_fix (uint16_t* city, uint8_t ix, uint8_t iy, uint16_t v, int improve_flags);
 int city_water_spread( uint16_t* city, uint8_t ix, uint8_t iy, uint16_t v, int improve_flags);
