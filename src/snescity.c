@@ -933,11 +933,14 @@ int write_new_city(const char* sfname, const uint16_t* citydata, const char* cit
 		return 1; }
 
 	*(uint16_t*)(citysram + cityoffset[citynum] + 0x18) = 20000; //money
-	*(uint8_t*)(citysram + cityoffset[citynum] + 0x1C) = 2; //speed: slow
+	*(uint8_t*)(citysram + cityoffset[citynum] + 0x1C) = 2; //speed: medium
 	*(uint8_t*)(citysram + cityoffset[citynum] + 0x1E) = 13; //options: auto-bulldoze, auto-goto, no auto-budget, BGM on
 	*(uint16_t*)(citysram + cityoffset[citynum] + 0x20) = 1900; //year
 	*(uint8_t*)(citysram + cityoffset[citynum] + 0x22) = 1; //month
 	*(uint8_t*)(citysram + cityoffset[citynum] + 0x24) = 7; //tax rate
+	
+	*(uint8_t*)(citysram + cityoffset[citynum] + 0x5C) = 2; //regular (not practice or scenario) city
+	*(uint8_t*)(citysram + cityoffset[citynum] + 0x60) = 7; //not in a scenario
 
 	*(uint16_t*)(citysram + cityoffset[citynum] + 0x74) = 0x0; //city founded
 	*(uint16_t*)(citysram + cityoffset[citynum] + 0x76) = 1900; //year 1900
