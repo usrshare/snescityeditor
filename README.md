@@ -4,19 +4,39 @@
 
 # Compilation/Installation
 
-**snescityeditor** only depends on one library, which is libpng. It should be easily available in any distribution's repositories.
+**snescityeditor**'s primary functionality only depends on one library, which is libpng. It should be easily available in any distribution's repositories. The graphical interface also depends on SDL2 and SDL\_image (2.0.1 or later). It's enabled by default, but can be removed by editing the **Makefile.cfg** file and setting "SDL\_UI" to 0.
 
 The program compiles into a single executable file that doesn't require installation. Users that want to do so are welcome to copy the resulting file into /usr/local/bin or an equivalent directory manually.
 
-## Compilation flags
-
-By appending "SDL\_UI=1" to the **make** command, the user may try and compile a work-in-progress graphical version of this program. It depends on SDL2 and SDL\_image version 2.0.1 or later.
+(Even if the program is compiled with the graphical interface, the command line parameters will still work.)
 
 # Usage
 
+## Graphical interface
+
+By default, the program opens with a menu providing different operations. This menu is still a work in progress, and there might be bugs, but it should work for the most basic needs.
+
+The graphical interface is operated with a mouse. A keyboard can also be used (but isn't necessary) on the city rename screen.
+
+The user can either open the map editor to create a new map from scratch or load an existing map from an SRAM file or a PNG map file. To load existing SRAM or PNG files into the program, their icons have to be dropped into the window. (This was the easiest to implement cross-platform way of getting a file path that didn't involve implementing a file manager.)
+
+In the map editor, left-clicking places tiles and right-clicking scrolls the map around.
+
+The options screen (shown on loading a map and accessible by clicking the gear-shaped icon in the editor) allows to set the city's in-game name, as well as apply several transformations to the map to improve its appearance.
+
+After all the parameters are specified and a "save" option is chosen, the program will report either "success" or "error", with an error description if one is available.
+
+### Screenshots
+
+![Title Screen](https://i.imgur.com/cI4JMfP.png)
+
+![Map Options Screen](https://i.imgur.com/bQQkXNB.png)
+
+![Editor Screen](https://i.imgur.com/n4wvZpG.png)
+
 ## Command line
 
-The program runs on a command line and takes arguments in a following format:
+The program can also run on a command line, in which case it takes arguments in a following format:
 
     snescityeditor -<ceif> [-2] [-x] sramfile.srm mapfile.png
 
@@ -47,23 +67,6 @@ Optional switches are as follows:
   4: (experimental algorithm) try to draw a thick coastline w/o overwriting sea tiles (requires 1). Maps imported this way may need manual editing.
 
   8: when drawing a thick coastline, check if the shore tiles fit each other. When using flags 1 and 2, results in less island shrinkage, but weirder looking maps.
-
-## Graphical interface
-
-When compiled with "SDL\_UI=1", the program opens with a menu providing different operations. This menu is still a work in progress, and there might be bugs, but it should work for the most basic needs.
-
-You can select different options by clicking on them. After selecting an option, the program will ask for the SRAM and PNG files to be dropped into its window. The program may also ask which one of the two cities in the SRAM file should be loaded or to apply one of the few improvements/modifications to the map file. Be warned that it doesn't prevent the user from choosing an empty city - the program will still report success, but the imported city won't load anyway.
-
-After all the parameters are specified, the program will either report "success" or "error".
-
-### Screenshots
-
-![Title Screen](https://i.imgur.com/cI4JMfP.png)
-
-![Map Options Screen](https://i.imgur.com/bQQkXNB.png)
-
-![Editor Screen](https://i.imgur.com/n4wvZpG.png)
-
 
 # Bugs
 
