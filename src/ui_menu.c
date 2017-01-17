@@ -927,8 +927,8 @@ void ui_updatefunc(void) {
 
 					if ((k == '\b') && (strlen(cityrename) != 0)) cityrename[strlen(cityrename)-1] = 0;
 					if ((k >= 32) && (strlen(cityrename) < 8) && (strchr(citychars,k)) ) { cityrename[strlen(cityrename)+1] = 0; cityrename[strlen(cityrename)] = k; }
-					if (k == 13) { city_modified = 1; strcpy(cityname,cityrename); sdl_ui_mode = sdl_back_mode; }
-					if (k == '\033') sdl_ui_mode = sdl_back_mode;
+					if (k == 13) { open_kbd(0); city_modified = 1; strcpy(cityname,cityrename); sdl_ui_mode = sdl_back_mode; }
+					if (k == '\033') { open_kbd(0); sdl_ui_mode = sdl_back_mode; }
 					if (k == '\177') memset(cityrename,0,9);
 
 					break; }
