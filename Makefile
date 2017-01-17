@@ -27,6 +27,8 @@ endif
 CC = $(PREFIX)$(_CC)
 OBJS = $(patsubst %,$(OBJDIR)/%,$(_OBJS))
 
+install: snescityeditor
+
 snescityeditor: $(OBJS)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
@@ -41,3 +43,5 @@ $(OBJDIR):
 
 clean:
 	rm -rf $(OBJDIR)/*.o snescityeditor
+
+.PHONY: clean install

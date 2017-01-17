@@ -58,11 +58,11 @@ After all the parameters are specified, the program will either report "success"
 
 ### Screenshots
 
-![Title Screen](https://i.imgur.com/CUvzeeA.png)
+![Title Screen](https://i.imgur.com/cI4JMfP.png)
 
-![Map Options Screen](https://i.imgur.com/kExfZQV.png)
+![Map Options Screen](https://i.imgur.com/bQQkXNB.png)
 
-![Editor Screen](https://i.imgur.com/s0HIVsU.png)
+![Editor Screen](https://i.imgur.com/n4wvZpG.png)
 
 
 # Bugs

@@ -14,6 +14,7 @@ char city_fname[PATH_MAX], map_fname[PATH_MAX];
 
 char newfile[PATH_MAX];
 char cityname[9];
+char cityrename[9];
 
 int citynum = 0;
 
@@ -21,6 +22,8 @@ uint16_t citytiles[CITYWIDTH*CITYHEIGHT];
 
 int transform_city = 0;
 uint16_t citytiles_trans[CITYWIDTH*CITYHEIGHT];
+
+int city_modified = 0;
 
 // editor-related parameters
 
@@ -50,14 +53,14 @@ int16_t scrdiff_x = 0, scrdiff_y = 0;
 
 uint8_t oldtilepos_x = 0, oldtilepos_y = 0;
 
-void fillspr(uint8_t s, uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
+void fillspr(uint16_t s, uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
 
 	for (int iy=0; iy < h; iy++)
 		for (int ix=0; ix < w; ix++)
 			spr(s,x+(ix*8),y+(iy*8),1,1);
 }
 
-void box(uint8_t s, uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t sz) {
+void box(uint16_t s, uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t sz) {
 
 	spr(s,x,y,sz,sz);
 	for (int ix=1; ix<(w-1); ix++)
@@ -103,8 +106,6 @@ void ui_initfunc(void) {
 
 	//menu backdrop
 
-	box(6,16,64,28,18,1);
-
 }
 
 enum ui_modes {
@@ -113,10 +114,12 @@ enum ui_modes {
 	UI_SELCITY,
 	UI_DROPPNG,
 	UI_OPTIONS,
+	UI_RENAME,
 	UI_EDITOR,
 	UI_SAVEMENU,
 	UI_PROCESSING,
 	UI_SUCCESS,
+	UI_EXITMENU,
 	UI_ERROR
 };
 
@@ -139,20 +142,31 @@ enum import_modes {
 
 int sdl_ui_mode = 0;
 int sdl_ui_operation = OP_LOADING;
+int sdl_back_mode = 0;
 
 int import_mode = 0;
 
-int button(uint8_t spr, const char* text, uint8_t x, uint8_t y, uint8_t w) {
+int sprbutton(uint16_t bspr, uint16_t pspr, uint8_t x, uint8_t y, uint8_t bw, uint8_t bh, uint8_t sw, uint8_t sh) {
+
+	box(bspr,x,y,bw,bh,1);
+	spr(pspr,x + (bw-sw)*4, y + (bh-sh)*4,sw,sh); 
+
+	if (hold(x,y,bw*8,bh*8,1)) box( (bspr == 266 ? 269 : 61),x,y,bw,bh,1);
+
+	if (click(x,y,bw*8,bh*8,1)) return 1; else return 0;
+}
+
+int button(uint16_t spr, const char* text, uint8_t x, uint8_t y, uint8_t w) {
 
 	box(spr,x,y,w,2,1);
 	s_addstr_cx(text,x + (4*w),y+4,1);
 
-	if (hold(x,y,w*8,16,1)) box(61,x,y,w,2,1);
+	if (hold(x,y,w*8,16,1)) box( (spr == 266 ? 269 : 61),x,y,w,2,1);
 
 	if (click(x,y,w*8,16,1)) return 1; else return 0;
 }
 
-int editbutton(uint8_t s, uint8_t x, uint8_t y) {
+int editbutton(uint16_t s, uint8_t x, uint8_t y) {
 
 	if (hold(x,y,16,16,1)) {
 		spr(50,x,y,2,2);
@@ -165,7 +179,7 @@ int editbutton(uint8_t s, uint8_t x, uint8_t y) {
 	if (click(x,y,16,16,1)) return 1; else return 0;
 }
 
-uint8_t citysprite(uint16_t tile) {
+uint16_t citysprite(uint16_t tile) {
 
 	switch(tile) {
 		case 0x00: return 16;
@@ -256,7 +270,7 @@ void drawcity(int16_t sx, int16_t sy) {
 		for (int ix = minx; ix < maxx; ix++) {
 
 			if ((iy >= 0) && (iy < CITYHEIGHT) && (ix >= 0) && (ix < CITYWIDTH)) {
-				uint8_t cspr = citysprite(citytiles[iy * CITYWIDTH + ix]);
+				uint16_t cspr = citysprite(citytiles[iy * CITYWIDTH + ix]);
 				spr(cspr, (ix*8) - sx, 16+(iy*8) - sy,1,1);
 			} else spr(254, (ix*8) - sx, 16+(iy*8) - sy,1,1); //out of bounds
 
@@ -362,6 +376,10 @@ void edit_spreadfix2(int8_t x, int8_t y, int8_t w, int8_t h) {
 			city_water_spread(citytiles,n.x,n.y, tile, smoothmode ? 4 : 1);
 		else if (tile_forest(n.x,n.y)) {
 			city_fix_forests(citytiles,n.x,n.y);
+		} else if (tile_road(n.x,n.y)) {
+			put_proper_road(citytiles,n.x,n.y);
+		} else if (tile_rail(n.x,n.y)) {
+			put_proper_rail(citytiles,n.x,n.y);
 		}
 
 		if (!tile_equal(citytiles[n.y * CITYWIDTH + n.x],tile)) {
@@ -370,7 +388,7 @@ void edit_spreadfix2(int8_t x, int8_t y, int8_t w, int8_t h) {
 			if (vtile(x-1,y)) llist_citycoord_push(&queue,(citycoord){x-1,y});
 			if (vtile(x+1,y)) llist_citycoord_push(&queue,(citycoord){x+1,y});
 			if (vtile(x,y+1)) llist_citycoord_push(&queue,(citycoord){x,y+1});
-                        
+
 			if (vtile(x-1,y-1)) llist_citycoord_push(&queue,(citycoord){x-1,y-1});
 			if (vtile(x+1,y-1)) llist_citycoord_push(&queue,(citycoord){x+1,y-1});
 			if (vtile(x-1,y+1)) llist_citycoord_push(&queue,(citycoord){x-1,y+1});
@@ -399,7 +417,7 @@ struct plot_param {
 };
 
 int plot_cb(uint16_t* map, uint8_t x, uint8_t y, void* param) {
-	
+
 	struct plot_param* ctx = param;
 	map[y * CITYWIDTH + x] = ctx->tile;
 	if (ctx->next) return ctx->next(map,x,y,ctx->nextparam);
@@ -422,7 +440,7 @@ int lineofsight(uint16_t* map, uint8_t sx, uint8_t sy, uint8_t tx, uint8_t ty, l
 	dx = abs(dx) << 1; dy = abs(dy) << 1;
 
 	int res = 0, maxres = 0;
-			
+
 	cb(map,sx,sy,cbparam);
 
 	if (dx >= dy) {
@@ -487,7 +505,7 @@ void ui_updatefunc(void) {
 		case UI_MAINMENU: {
 					  // main/load menu
 
-					  box(6,16,64,28,18,1);
+					  box(6,8,64,30,18,1);
 
 					  enum loadmenuops {
 						  MM_EMPTY,
@@ -505,7 +523,7 @@ void ui_updatefunc(void) {
 
 					  break; }
 		case UI_SAVEMENU: {
-					  box(6,16,64,28,18,1);
+					  box(6,8,64,30,18,1);
 
 					  enum savemenuops {
 						  SM_SAVE_PNG,
@@ -525,7 +543,7 @@ void ui_updatefunc(void) {
 		case UI_DROPSRAM: {
 					  // drop city file here
 
-					  box(13,16,64,28,18,1);
+					  box(13,8,64,30,18,1);
 
 					  s_addstr_c("Drag your SRAM file",80,1);
 					  s_addstr_c("into this window",96,1);
@@ -538,7 +556,7 @@ void ui_updatefunc(void) {
 					  break; }
 		case UI_SELCITY: {
 
-					 box(6,16,64,28,18,1);
+					 box(6,8,64,30,18,1);
 
 					 char city1[17], city2[17];
 
@@ -566,7 +584,7 @@ void ui_updatefunc(void) {
 					 break; }
 		case UI_DROPPNG: {
 
-					 box(13,16,64,28,18,1);
+					 box(13,8,64,30,18,1);
 					 // drop png file here
 
 					 s_addstr_c("Drag your PNG map file",80,1);
@@ -576,6 +594,7 @@ void ui_updatefunc(void) {
 						 int r = read_png_map(map_fname,citytiles);
 						 transform_city = 1;
 						 sdl_ui_mode = UI_OPTIONS;
+						 sdl_back_mode = UI_DROPPNG;
 						 import_mode = 0;
 					 }
 
@@ -668,12 +687,12 @@ void ui_updatefunc(void) {
 						if (editbutton(smoothmode ? 69 : 68,112,0)) smoothmode = !smoothmode; //smooth mode
 						if (editbutton(81,128,0)) brushtype = BT_PICKER; //tile picker
 
-						if (editbutton(57,192,0)) { transform_city = 1; sdl_ui_mode = UI_OPTIONS; } //options
+						if (editbutton(57,192,0)) { transform_city = 1; sdl_ui_mode = UI_OPTIONS; sdl_back_mode = UI_EDITOR; } //options
 						if (editbutton(83,208,0)) sdl_ui_mode = UI_MAINMENU; //load
 						if (editbutton(84,224,0)) sdl_ui_mode = UI_SAVEMENU; //save
 
 						if (editbutton(85,240,0)) { //exit
-							sdl_ui_mode = UI_MAINMENU;
+							if (city_modified) sdl_ui_mode = UI_EXITMENU; else exit(0);
 						} 
 
 					}
@@ -690,6 +709,7 @@ void ui_updatefunc(void) {
 					if (hold(0,citytop,255,cityhgt,1)) {
 						//left mouse button held, paint
 
+
 						int16_t tilepos_x = (mousecoords.x + edit_scrollx) / 8;
 						int16_t tilepos_y = (mousecoords.y + edit_scrolly - 16) / 8;
 
@@ -702,7 +722,7 @@ void ui_updatefunc(void) {
 								case BT_WATERCOAST: citytiles[CITYWIDTH * tilepos_y + tilepos_x] = 2; break;
 
 								case BT_FOREST: citytiles[CITYWIDTH*tilepos_y + tilepos_x] = 0x14;
-									        if (smoothmode) {
+										if (smoothmode) {
 											if ( (tilepos_y < (CITYHEIGHT-1)) && (citytiles[CITYWIDTH*(tilepos_y+1) + tilepos_x] == 0) ) citytiles[CITYWIDTH*(tilepos_y+1) + tilepos_x] = 0x14;
 											if ( (tilepos_x < (CITYWIDTH-1)) && (citytiles[CITYWIDTH*tilepos_y + (tilepos_x+1)] == 0) ) citytiles[CITYWIDTH*tilepos_y + (tilepos_x+1)] = 0x14;
 											if ( (tilepos_x < (CITYWIDTH-1)) && (tilepos_y < (CITYHEIGHT-1)) && (citytiles[CITYWIDTH*(tilepos_y+1) + (tilepos_x+1)] == 0) ) citytiles[CITYWIDTH*(tilepos_y+1) + (tilepos_x+1)] = 0x14;
@@ -717,6 +737,7 @@ void ui_updatefunc(void) {
 
 								case BT_PICKER: brushtype = BT_TILE; curtile = citytiles[tilepos_y * CITYWIDTH + tilepos_x];
 							}
+							if (brushtype != BT_PICKER) city_modified = 1;
 							// paint.
 						}
 
@@ -731,10 +752,17 @@ void ui_updatefunc(void) {
 						if (edit_scrollx < -64) edit_scrollx = -64; if (edit_scrollx > 96*8) edit_scrollx = 96*8;
 						if (edit_scrolly < -64) edit_scrolly = -64; if (edit_scrolly > 82*8) edit_scrolly = 82*8;
 
+						uint8_t xshift = ((mousecoords.x >= 200) && (mousecoords.y < 72)) ? 0 : 200;
+
+						box(266, xshift + 8,24,5,5,1);
+						spr(314, xshift + 12,34,4,4);
+						s_addstr(cityname, xshift + 12,26,2);
+						spr(318, xshift + 10 + ((edit_scrollx+16) / 32), 32 + (edit_scrolly / 32), 2, 2);
+
 					} else {
 						scrdiff_x = 0; scrdiff_y = 0;
 					}
-					
+
 					if (hover(0,citytop,255,cityhgt)) {
 
 						int16_t tilepos_x = (mousecoords.x + edit_scrollx) / 8;
@@ -767,7 +795,7 @@ void ui_updatefunc(void) {
 						 transform_city = 0;
 					 }
 
-					 box(13,16,64,28,18,1);
+					 box(13,8,64,30,18,1);
 					 box(10,32,80,17,15,1);
 
 					 strcpy(newfile,map_fname);
@@ -791,67 +819,174 @@ void ui_updatefunc(void) {
 						 }
 					 }
 
-					 s_addstr("MODIFY:",176,80,1);
-
-					 box(58,176,96,7,2,1);
+					 s_addstr("MODIFY",180,80,1);
 
 					 const char* import_desc[] = {
 						 "NONE","SIMPLE","COAST1","COAST2","EXTRA"
 					 };
 
-					 if (button(58,import_desc[import_mode],176,96,7)) {
+					 if (button(58,import_desc[import_mode],176,88,7)) {
 						 import_mode += 1;
 						 if (import_mode >= I_COUNT) import_mode = 0;
 						 transform_city = 1;
 					 }
 
-					 if (button(58,"EDIT",176,128,7)) {
+					 if (button(58,"Rename",176,112,7)) {
+						 memset(cityrename,0,9);
+						 strcpy(cityrename,cityname);
+						 sdl_ui_mode = UI_RENAME;
+						 sdl_back_mode = UI_OPTIONS;
+					 }
+
+					 if (button(58,"Edit",176,132,7)) {
 						 memcpy(citytiles,citytiles_trans,sizeof citytiles);
+						 if (import_mode != I_NOIMPROVE) city_modified = 1;
 						 sdl_ui_mode = UI_EDITOR;
 					 }
 
-					 if (button(58,"SAVE",176,156,7)) {
+					 if (button(58,"Save",176,152,7)) {
 						 memcpy(citytiles,citytiles_trans,sizeof citytiles);
+						 if (import_mode != I_NOIMPROVE) city_modified = 1;
 						 sdl_ui_mode = UI_SAVEMENU;
 					 }
 
-					 if (button(58,"BACK",176,184,7)) sdl_ui_mode = UI_MAINMENU;
+					 if (button(58,"Back",176,180,7)) sdl_ui_mode = sdl_back_mode;
 
 					 break; }
+		case UI_RENAME: {
+					open_kbd(1);
+					box(266,8,64,30,18,1);
+
+					s_addstr_c("Enter name of the city.",72,1);
+
+					box(320,88,88,10,2,1);
+
+					s_addstr(cityrename,96,88,0);
+					if (framecnt & 16) spr(339, 96 + (8*strlen(cityrename)),96,1,1);
+
+					const char* citychars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ,.- ";
+
+					uint8_t k = 0;
+
+					box(266,16,112,2,2,1);
+					if (button(58,"1",32,112,2)) k = '1';
+					if (button(58,"2",48,112,2)) k = '2';
+					if (button(58,"3",64,112,2)) k = '3';
+					if (button(58,"4",80,112,2)) k = '4';
+					if (button(58,"5",96,112,2)) k = '5';
+					if (button(58,"6",112,112,2)) k = '6';
+					if (button(58,"7",128,112,2)) k = '7';
+					if (button(58,"8",144,112,2)) k = '8';
+					if (button(58,"9",160,112,2)) k = '9';
+					if (button(58,"0",176,112,2)) k = '0';
+					if (button(266,"CLEAR",192,112,6)) k = '\177';
+
+					box(266,16,128,3,2,1);
+					if (button(58,"Q",40,128,2)) k = 'Q';
+					if (button(58,"W",56,128,2)) k = 'W';
+					if (button(58,"E",72,128,2)) k = 'E';
+					if (button(58,"R",88,128,2)) k = 'R';
+					if (button(58,"T",104,128,2)) k = 'T';
+					if (button(58,"Y",120,128,2)) k = 'Y';
+					if (button(58,"U",136,128,2)) k = 'U';
+					if (button(58,"I",152,128,2)) k = 'I';
+					if (button(58,"O",168,128,2)) k = 'O';
+					if (button(58,"P",184,128,2)) k = 'P';
+					if (button(266,"B.S",200,128,5)) k = '\b';
+
+					box(266,16,144,4,2,1);
+					if (button(58,"A",48,144,2)) k = 'A';
+					if (button(58,"S",64,144,2)) k = 'S';
+					if (button(58,"D",80,144,2)) k = 'D';
+					if (button(58,"F",96,144,2)) k = 'F';
+					if (button(58,"G",112,144,2)) k = 'G';
+					if (button(58,"H",128,144,2)) k = 'H';
+					if (button(58,"J",144,144,2)) k = 'J';
+					if (button(58,"K",160,144,2)) k = 'K';
+					if (button(58,"L",176,144,2)) k = 'L';
+					if (button(58,"-",192,144,2)) k = '-';
+					if (button(266,"OK",208,144,4)) k = 13;
+
+					box(266,16,160,5,2,1);
+					if (button(58,"Z",56,160,2)) k = 'Z';
+					if (button(58,"X",72,160,2)) k = 'X';
+					if (button(58,"C",88,160,2)) k = 'C';
+					if (button(58,"V",104,160,2)) k = 'V';
+					if (button(58,"B",120,160,2)) k = 'B';
+					if (button(58,"N",136,160,2)) k = 'N';
+					if (button(58,"M",152,160,2)) k = 'M';
+					if (button(58,",",168,160,2)) k = ',';
+					if (button(58,".",184,160,2)) k = '.';
+					if (button(266,"Back",200,160,5)) k = '\033';
+
+					box(266,16,176,4,2,1);
+					if (button(58," SPACE ",48,176,20)) k = ' ';
+					box(266,208,176,4,2,1);
+
+					if (k == 0) k = toupper(read_kbd());
+
+					if ((k == '\b') && (strlen(cityrename) != 0)) cityrename[strlen(cityrename)-1] = 0;
+					if ((k >= 32) && (strlen(cityrename) < 8) && (strchr(citychars,k)) ) { cityrename[strlen(cityrename)+1] = 0; cityrename[strlen(cityrename)] = k; }
+					if (k == 13) { city_modified = 1; strcpy(cityname,cityrename); sdl_ui_mode = sdl_back_mode; }
+					if (k == '\033') sdl_ui_mode = sdl_back_mode;
+					if (k == '\177') memset(cityrename,0,9);
+
+					break; }
 		case UI_PROCESSING: {
-					    box(6,16,64,28,18,1);
+					    box(6,8,64,30,18,1);
 
 					    s_addstr_c("Now processing...",160,0);
 
 					    int r = 0;
 					    switch (sdl_ui_operation) {
 						    case OP_CREATENEW:
+							    if (strlen(cityname) == 0) strcpy(cityname,"SNESCITY");
 							    strcpy(newfile,cityname);
 							    strcat(newfile,".srm");
 							    r = write_new_city(newfile,citytiles,cityname,0);
 							    break;
 						    case OP_MAP_TO_SRAM: r = replace_city(city_fname,citytiles,citynum);
 									 break;
-						    case OP_MAP_TO_PNG: strcpy(newfile,cityname);
-									strcat(newfile,".png");
-									r = write_png_map (newfile, citytiles);
-									break;
+						    case OP_MAP_TO_PNG: 
+									 if (strlen(cityname) == 0) strcpy(cityname,"SNESCITY");
+									 strcpy(newfile,cityname);
+									 strcat(newfile,".png");
+									 r = write_png_map (newfile, citytiles);
+									 break;
 					    }
+					    city_modified = 0;
 					    sdl_ui_mode = r ? UI_ERROR : UI_SUCCESS;
 					    // working...
 					    break; }
 		case UI_SUCCESS: {
 
-					 box(6,16,64,28,18,1);
+
 
 					 s_addstr_c("success.",112,0);
 
 					 if (button(58,"BACK",176,184,7)) sdl_ui_mode = UI_MAINMENU;
 					 // operation successful
 					 break; }
+		case UI_EXITMENU: {
+					 box(6,64,64,16,8,1);
+					 spr(368,76,76,14,1);
+
+					 if (sprbutton(266,256,72,88,4,4,3,2)) {
+						 sdl_ui_mode = UI_SAVEMENU;
+					 }
+					 
+					 if (sprbutton(266,259,112,88,4,4,3,2)) {
+						 exit(0);
+					 }
+					 
+					 if (sprbutton(266,262,152,88,4,4,3,2)) {
+						 sdl_ui_mode = UI_EDITOR;
+					 }
+					 
+
+				  	 break; }
 		case UI_ERROR: {
 
-				       box(6,16,64,28,18,1);
 
 				       s_addstr_c("error.",112,0);
 

@@ -21,8 +21,11 @@ unsigned int win_w = 640;
 unsigned int win_h = 480;
 SDL_Rect viewport = {.x = 0, .y = 0, .w = 640, .h = 480};
 
-
 struct mousecoord mousecoords;
+
+uint8_t keyboard_buffer[16];
+uint8_t keys_held[16];
+uint8_t kbd_open = 0;
 
 int got_drop = 0;
 char dropfilename[PATH_MAX];
@@ -35,16 +38,16 @@ int menu_foc = -1;
 int hover(uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
 
 	if ((mousecoords.x >= x) && (mousecoords.x < (x+w)) &&
-	(mousecoords.y >= y) && (mousecoords.y < (y+h))) return 1; else return 0;
+			(mousecoords.y >= y) && (mousecoords.y < (y+h))) return 1; else return 0;
 }
 
 int hold(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t bmask) {
 
 	if ( (mousecoords.press_x >= x) && (mousecoords.press_x < (x+w)) &&
-	(mousecoords.press_y >= y) && (mousecoords.press_y < (y+h)) &&
-	(mousecoords.x >= x) && (mousecoords.x < (x+w)) &&
-	(mousecoords.y >= y) && (mousecoords.y < (y+h)) &&
-	(mousecoords.buttons & bmask)) {
+			(mousecoords.press_y >= y) && (mousecoords.press_y < (y+h)) &&
+			(mousecoords.x >= x) && (mousecoords.x < (x+w)) &&
+			(mousecoords.y >= y) && (mousecoords.y < (y+h)) &&
+			(mousecoords.buttons & bmask)) {
 
 		return 1;
 	}
@@ -54,10 +57,10 @@ int hold(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t bmask) {
 int click(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t bmask) {
 
 	if ( (mousecoords.press_x >= x) && (mousecoords.press_x < (x+w)) &&
-	(mousecoords.press_y >= y) && (mousecoords.press_y < (y+h)) &&
-	(mousecoords.release_x >= x) && (mousecoords.release_x < (x+w)) &&
-	(mousecoords.release_y >= y) && (mousecoords.release_y < (y+h)) && 
-	(mousecoords.b_release & bmask) ) {
+			(mousecoords.press_y >= y) && (mousecoords.press_y < (y+h)) &&
+			(mousecoords.release_x >= x) && (mousecoords.release_x < (x+w)) &&
+			(mousecoords.release_y >= y) && (mousecoords.release_y < (y+h)) && 
+			(mousecoords.b_release & bmask) ) {
 
 		mousecoords.press_x = 255; mousecoords.press_y = 255;
 		mousecoords.release_x = 255; mousecoords.release_y = 255;
@@ -88,6 +91,29 @@ SDL_Rect boxify() {
 	return viewport;
 }
 
+int strdel(char* string, char character) {
+
+	int r=0;
+	if (character == 0) return -1;
+
+	char* fchar = 0;
+	while ( (fchar = strchr(string,character)) != NULL) {
+		memmove(fchar,fchar+1,strlen(fchar)); r++; }
+
+	return r;
+}
+uint8_t open_kbd(uint8_t state) {
+	uint8_t r = kbd_open;
+	kbd_open = state;
+	return r;
+}
+
+uint8_t read_kbd(void) {
+	uint8_t r = keyboard_buffer[0];
+	if (r) strdel(keyboard_buffer,r);
+	return r;
+}
+
 struct mousecoord get_mouse() {
 
 	struct mousecoord mc = mousecoords;
@@ -104,14 +130,21 @@ int pset(uint32_t color, uint8_t x, uint8_t y) {
 	return fillrect(color,x,y,1,1);
 }
 
-int spr(uint8_t spr, int16_t x, int16_t y, uint8_t w, uint8_t h) {
+int spr4(uint16_t spr, int16_t x, int16_t y, uint8_t w, uint8_t h) {
+
+	SDL_Rect sr = {.x = (spr % 32)*4, .y = (spr / 32)*8, .w = w*4, .h = h*8};
+	SDL_Rect dr = {.x = x, .y = y, .w = w*4, .h = h*8};
+	return SDL_BlitSurface(tsurf,&sr,scs,&dr);
+}
+
+int spr(uint16_t spr, int16_t x, int16_t y, uint8_t w, uint8_t h) {
 
 	SDL_Rect sr = {.x = (spr % 16)*8, .y = (spr / 16)*8, .w = w*8, .h = h*8};
 	SDL_Rect dr = {.x = x, .y = y, .w = w*8, .h = h*8};
 	return SDL_BlitSurface(tsurf,&sr,scs,&dr);
 }
 
-const char* sprchars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ,.-";
+const char* sprchars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ,.- abcdefghijklmnopqrstuvwxyz:?!";
 
 int s_addstr(const char* text, uint8_t x, uint8_t y, uint8_t font) {
 
@@ -126,14 +159,29 @@ int s_addstr(const char* text, uint8_t x, uint8_t y, uint8_t font) {
 			cy += 16;
 		} else {
 
-			char* tchar = strchr(sprchars,toupper(*ct));
+			if (*ct != ' ') {
+				char* tchar = strchr(sprchars, (font != 1) ? toupper(*ct) : (int)*ct);
 
-			if (tchar) {
-				int ci = (tchar - sprchars);
-				uint8_t si = (font ? 208 : 96) + (ci / 16)*(font ? 16 : 32) + (ci % 16);
-				spr(si,cx,cy,1,font ? 1 : 2);
-			}
-			cx += 8;
+				if (tchar) {
+					int ci = (tchar - sprchars);
+					uint16_t si;
+					switch (font) {
+						case 0:
+							si = 96 + (ci/16) * 32 + (ci % 16);
+							spr(si,cx,cy,1,2);
+							break;
+						case 1:
+							si = 400 + ci;
+							spr(si,cx,cy,1,1);
+							break;
+						case 2:
+							si = 960 + ci;
+							spr4(si,cx,cy,1,1);
+							break;
+					}
+
+				}}
+			cx += (font == 2) ? 4 : 8;
 		}
 		ct++;
 	}
@@ -174,6 +222,9 @@ int sdl_ui_menu(int choice_c, char** choice_v, int sy) {
 }
 
 int sdl_ui_main(cb_noparam mainfunc, cb_noparam updatefunc) {
+
+	memset(keyboard_buffer,0,sizeof keyboard_buffer);
+	memset(keys_held,0,sizeof keys_held);
 
 	int r = SDL_Init(SDL_INIT_VIDEO);
 	if (r != 0) {
@@ -243,23 +294,45 @@ int sdl_ui_main(cb_noparam mainfunc, cb_noparam updatefunc) {
 						mousecoords.release_y = mousecoords.y;
 					}
 					break;
-				case SDL_WINDOWEVENT:
-					if (lastevent.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {rerender = 1; break; }
-					if (lastevent.window.event != SDL_WINDOWEVENT_SIZE_CHANGED) break;
+				case SDL_KEYDOWN:
+				case SDL_KEYUP: {
+							if ((kbd_open) && (lastevent.key.keysym.sym <= 127)) {
 
-					SDL_GetWindowSize(mainwin,&win_w,&win_h);
-					SDL_Rect newsize = boxify();
-					SDL_RenderSetViewport(ren, &newsize);
-					rerender = 1;
-					break;
+								char kcode = lastevent.key.keysym.sym;
+
+								if (lastevent.key.state == SDL_PRESSED) {
+									//SDL_PRESSED
+
+									if (strchr(keys_held,kcode) == NULL) {
+										if ( (strlen(keys_held) < 15) && (strlen(keyboard_buffer) < 15) ) {
+											keys_held[strlen(keys_held)] = kcode;
+											keyboard_buffer[strlen(keyboard_buffer)] = kcode;
+											printf("Got key %d\n", kcode); }
+										else printf("Keyboard buffer full.\n");
+									}
+								} else {
+									//SDL_RELEASED
+									strdel(keys_held,kcode);
+								}
+							}
+							break; }
+				case SDL_WINDOWEVENT:
+						if (lastevent.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {rerender = 1; break; }
+						if (lastevent.window.event != SDL_WINDOWEVENT_SIZE_CHANGED) break;
+
+						SDL_GetWindowSize(mainwin,&win_w,&win_h);
+						SDL_Rect newsize = boxify();
+						SDL_RenderSetViewport(ren, &newsize);
+						rerender = 1;
+						break;
 				case SDL_DROPFILE:
 
-					strncpy(dropfilename,lastevent.drop.file,PATH_MAX);
-					got_drop = 1;
-					free(lastevent.drop.file);
-					break;
+						strncpy(dropfilename,lastevent.drop.file,PATH_MAX);
+						got_drop = 1;
+						free(lastevent.drop.file);
+						break;
 				case SDL_QUIT:
-					quit = 1;
+						quit = 1;
 			}
 
 		}
@@ -294,21 +367,6 @@ int sdl_ui_main(cb_noparam mainfunc, cb_noparam updatefunc) {
 		}
 
 	}
-
-
-
-
-	/*s_addstr(
-	//               123456789012345678901234
-	"  THIS GRAPHICAL UI IS  \n"
-	"  NOT YET IMPLEMENTED.\n"
-	"BUT YOU CAN ALREADY SEE\n"
-	"THE SNES-LIKE NON-SQUARE\n"
-	"PIXEL SCALING AND SUCH.\n"
-	"\n",32,80);
-
-	 */
-
 
 	SDL_DestroyRenderer(ren);
 	SDL_DestroyWindow(mainwin);
