@@ -960,7 +960,7 @@ void ui_updatefunc(void) {
 					    break; }
 		case UI_SUCCESS: {
 
-
+					 box(6,8,64,30,18,1);
 
 					 s_addstr_c("success.",112,0);
 
@@ -987,6 +987,7 @@ void ui_updatefunc(void) {
 				  	 break; }
 		case UI_ERROR: {
 
+				       box(6,8,64,30,18,1);
 
 				       s_addstr_c("error.",112,0);
 
