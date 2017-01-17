@@ -56,6 +56,15 @@ You can select different options by clicking on them. After selecting an option,
 
 After all the parameters are specified, the program will either report "success" or "error".
 
+### Screenshots
+
+![Title Screen](https://i.imgur.com/CUvzeeA.png)
+
+![Map Options Screen](https://i.imgur.com/kExfZQV.png)
+
+![Editor Screen](https://i.imgur.com/s0HIVsU.png)
+
+
 # Bugs
 
 The program only performs a simplified compression routine on maps when importing them into the game. This means that a complex map, including lots of buildings or complex river/forest patterns, might be impossible to import back.
