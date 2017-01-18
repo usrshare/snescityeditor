@@ -459,7 +459,7 @@ uint16_t improve4(int n) {
 		case N_SW | N_W | N_NW | N_N | N_NE:
 		case N_SE | N_E | N_N | N_NW:
 		case N_SE | N_E | N_NE | N_N | N_NW:
-			return 0x2; //water
+			return 0x1; //water
 
 		case N_E | N_SE:
 		case N_S | N_SE:
@@ -551,7 +551,7 @@ uint16_t improve4(int n) {
 	return 0;
 }
 
-int city_water_fix (uint16_t* city, uint8_t ix, uint8_t iy, uint16_t v, int improve_flags) {
+int simple_coast_fit (uint16_t* city, uint8_t ix, uint8_t iy, uint16_t v, int improve_flags) {
 
 	int alttile = (improve_flags & 32) ? 0 : (( rand() & 1 ) ? 8 : 0); //use alternative tile?
 
@@ -628,11 +628,11 @@ void put_proper_road(uint16_t* city, uint8_t ix, uint8_t iy) {
 		case  0:
 		case  2:
 		case  8:
-		case 10: city[iy*CITYWIDTH+ix] = 0x32; break;
+		case 10: city[iy*CITYWIDTH+ix] = ((city[iy*CITYWIDTH+ix] & 0xFFFE) == 0x30) ? 0x30 : 0x32; break;
 
 		case  1:
 		case  4:
-		case  5: city[iy*CITYWIDTH+ix] = 0x33; break;
+		case  5: city[iy*CITYWIDTH+ix] = ((city[iy*CITYWIDTH+ix] & 0xFFFE) == 0x30) ? 0x31 : 0x33; break;
 
 		case  6: city[iy*CITYWIDTH+ix] = 0x35; break;
 		case  3: city[iy*CITYWIDTH+ix] = 0x34; break;
@@ -649,17 +649,17 @@ void put_proper_road(uint16_t* city, uint8_t ix, uint8_t iy) {
 
 void put_proper_rail(uint16_t* city, uint8_t ix, uint8_t iy) {
 
-	int n = check_neighbors4(city,iy,ix,0x70,0x7E); //roads
+	int n = check_neighbors4(city,iy,ix,0x70,0x7E); //railroads
 
 	switch(n) {
 		case  0:
 		case  2:
 		case  8:
-		case 10: city[iy*CITYWIDTH+ix] = 0x72; break;
+		case 10: city[iy*CITYWIDTH+ix] = ((city[iy*CITYWIDTH+ix] & 0xFFFE) == 0x70) ? 0x70 : 0x72; break;
 
 		case  1:
 		case  4:
-		case  5: city[iy*CITYWIDTH+ix] = 0x73; break;
+		case  5: city[iy*CITYWIDTH+ix] = ((city[iy*CITYWIDTH+ix] & 0xFFFE) == 0x70) ? 0x71 : 0x73; break;
 
 		case  6: city[iy*CITYWIDTH+ix] = 0x75; break;
 		case  3: city[iy*CITYWIDTH+ix] = 0x74; break;
@@ -749,7 +749,7 @@ int city_improve (uint16_t* city, int improve_flags) {
 
 			if ( ((improve_flags & 3) == 3) && ((v >= 0x04) && (v <= 0x13)) ) {
 
-				city_water_fix(city,ix,iy,v,improve_flags);
+				simple_coast_fit(city,ix,iy,v,improve_flags);
 			}
 
 			if ((v >= 0x14) && (v <= 0x25)) {
