@@ -284,10 +284,13 @@ struct _citycoord {
 
 typedef struct _citycoord citycoord;
 
-bool tile_onlywater(uint8_t x, uint8_t y) {
+bool tile_waterbridge(uint8_t x, uint8_t y) {
     if ( (x >= CITYWIDTH) || (y >= CITYHEIGHT) ) return false;
     uint16_t tile = citytiles[y * CITYWIDTH + x];
-    return ((tile >= 1) && (tile <= 3));
+    if ((tile >= 1) && (tile <= 3)) return true;
+    if ((tile >= 0x30) && (tile <= 0x31)) return true;
+    if ((tile >= 0x70) && (tile <= 0x71)) return true; 
+    return false;
 }
 
 bool tile_water(uint8_t x, uint8_t y) {
@@ -683,6 +686,8 @@ void ui_updatefunc(void) {
 				int16_t tilepos_x = (mousecoords.x + edit_scrollx) & 0xFFF8;
 				int16_t tilepos_y = (mousecoords.y + edit_scrolly) & 0xFFF8;
 
+				//this one is different from the one below, as tilepos_x and _y are not divided by 8.
+
 				spr(80, tilepos_x - edit_scrollx, tilepos_y - edit_scrolly, 1,1);
 
 			    }
@@ -709,10 +714,10 @@ void ui_updatefunc(void) {
 							city_fix_forests(citytiles,tilepos_x,tilepos_y);
 							edit_spreadfix2(tilepos_x-1,tilepos_y-1,smoothmode ? 4 : 3, smoothmode ? 4 : 3); break;
 
-					case BT_ROAD: citytiles[CITYWIDTH*tilepos_y + tilepos_x] = ( tile_onlywater(tilepos_x, tilepos_y) ? 0x30 : 0x32 );
+					case BT_ROAD: citytiles[CITYWIDTH*tilepos_y + tilepos_x] = ( tile_waterbridge(tilepos_x, tilepos_y) ? 0x30 : 0x32 );
 						      edit_spreadroad(tilepos_x,tilepos_y); break;
 
-					case BT_RAIL: citytiles[CITYWIDTH*tilepos_y + tilepos_x] = ( tile_onlywater(tilepos_x, tilepos_y) ? 0x70 : 0x72 );
+					case BT_RAIL: citytiles[CITYWIDTH*tilepos_y + tilepos_x] = ( tile_waterbridge(tilepos_x, tilepos_y) ? 0x70 : 0x72 );
 						      edit_spreadrail(tilepos_x,tilepos_y); break;
 
 					case BT_TILE: citytiles[CITYWIDTH*tilepos_y + tilepos_x] = curtile; break;	      
