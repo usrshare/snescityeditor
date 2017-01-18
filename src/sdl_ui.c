@@ -12,7 +12,21 @@ SDL_Window* mainwin = 0; //main window
 SDL_Renderer* ren = 0; //renderer
 SDL_Surface* tsurf = 0; //texture surface (128x256)
 SDL_Surface* scs = 0; //screen surface (256x224)
-SDL_Texture* tex = 0; //screen texture (256x224)
+
+#ifdef PRESCALE
+SDL_Surface* scs2 = 0; //scaled screen surface (512x448)
+#define SCREENW 256
+#define SCREENH 224
+#define OUTPUTW 512
+#define OUTPUTH 448
+#else
+#define SCREENW 256
+#define SCREENH 224
+#define OUTPUTW 256
+#define OUTPUTH 224
+#endif
+
+SDL_Texture* tex = 0; //screen texture (OUTPUTWxOUTPUTH)
 
 uint32_t ticks = 0;
 uint32_t framecnt = 0;
@@ -238,8 +252,8 @@ int sdl_ui_main(cb_noparam mainfunc, cb_noparam updatefunc) {
 		fprintf(stderr,"Unable to create window: %s\n",SDL_GetError()); exit(1); }
 
 	ren = SDL_CreateRenderer(mainwin,-1,SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
 	//SDL_RenderSetLogicalSize(ren, 256, 224);
+	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
 
 	if (!ren) {
 		fprintf(stderr,"Unable to create renderer: %s\n",SDL_GetError()); exit(1); }
@@ -250,7 +264,14 @@ int sdl_ui_main(cb_noparam mainfunc, cb_noparam updatefunc) {
 	if (!scs) {
 		fprintf(stderr,"Unable to create surface: %s\n",SDL_GetError()); exit(1); }
 
-	tex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,256,224);
+#ifdef PRESCALE
+	scs2 = SDL_CreateRGBSurface(0,512,448,32,0x00FF0000,0x0000FF00,0x000000FF,0xFF000000);
+
+	if (!scs2) {
+		fprintf(stderr,"Unable to create scaled surface: %s\n",SDL_GetError()); exit(1); }
+#endif
+	
+	tex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,OUTPUTW,OUTPUTH);
 
 	if (!tex) {
 		fprintf(stderr,"Unable to create texture: %s\n",SDL_GetError()); exit(1); }
@@ -339,7 +360,12 @@ int sdl_ui_main(cb_noparam mainfunc, cb_noparam updatefunc) {
 
 		if (rerender) {
 
+#ifdef PRESCALE
+			SDL_BlitScaled(scs,NULL,scs2,NULL);
+			SDL_UpdateTexture(tex, NULL, scs2->pixels, scs2->pitch);
+#else
 			SDL_UpdateTexture(tex, NULL, scs->pixels, scs->pitch);
+#endif
 			SDL_RenderClear(ren);
 			SDL_RenderCopy(ren, tex, NULL, NULL);
 			SDL_RenderPresent(ren);
