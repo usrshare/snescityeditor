@@ -574,7 +574,7 @@ void ui_updatefunc(void) {
 			     s_addstr_c("into this window",96,1);
 
 			     if (getdrop(map_fname,PATH_MAX)) {
-				 int r = read_png_map(map_fname,citytiles);
+				 read_png_map(map_fname,citytiles);
 				 transform_city = 1;
 				 sdl_ui_mode = UI_OPTIONS;
 				 sdl_back_mode = UI_DROPPNG;

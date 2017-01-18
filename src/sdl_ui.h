@@ -26,7 +26,7 @@ typedef void (*cb_noparam)(void);
 int hover(uint8_t x, uint8_t y, uint8_t w, uint8_t h);
 int hold(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t bmask);
 int click(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t bmask);
-uint8_t read_kbd(void);
+char read_kbd(void);
 uint8_t open_kbd(uint8_t state);
 
 int sdl_ui_main(cb_noparam mainfunc, cb_noparam updatefunc);

@@ -211,7 +211,7 @@ int read_png_map(const char* pngname, uint16_t* citydata) {
 	
 	// read PNG
 	
-	char pnghead[8];
+	unsigned char pnghead[8];
 	
 	if (fread(pnghead,1,8,mapfile) != 8) { 
 		perror("read data"); return 1;}
@@ -253,7 +253,7 @@ int read_png_map(const char* pngname, uint16_t* citydata) {
 	if (d_col != PNG_COLOR_TYPE_RGB) {
 		fprintf(stderr,"Map image should be 8-bit RGB.\n"); return 1; }
 
-	int d_passes = png_set_interlace_handling(png_ptr);
+	png_set_interlace_handling(png_ptr);
 	png_read_update_info(png_ptr,info_ptr);
 
 	png_bytep* d_rowptrs = malloc(sizeof(png_bytep) * d_h);

@@ -5,7 +5,7 @@ SRCDIR=src
 
 _CC=gcc
 LD=ld
-CFLAGS = -std=c11
+CFLAGS = -std=c11 -Wall
 DEFS += -D_POSIX_C_SOURCE=2 $(shell libpng-config --cflags)
 LDFLAGS = $(shell libpng-config --ldflags )
 
@@ -19,7 +19,7 @@ endif
 ifdef RELEASE
 DEFS += -xSSE3 -O3 -DNDEBUG
 else
-DEFS += -g
+DEFS += -g -O2
 endif
 
 ifdef SDL_UI

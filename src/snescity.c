@@ -7,7 +7,7 @@
 #include "defines.h"
 #include "pngmap.h"
 
-char* namechars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ,.- ";
+unsigned char* namechars = (unsigned char*) "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ,.- ";
 const size_t cityheader[2] = {0, 0x7FF0};
 const size_t cityoffset[2] = {0x10, 0x4000};
 const char* months[] = {"???","JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"};
@@ -52,8 +52,6 @@ int city_decompress (const uint16_t* in, uint16_t* out, size_t* outsz) {
 
 	uint16_t v = 0;
 
-	int increment = 0;
-
 	while ((v = in[inpos]) != 0xFFFF) {
 
 		if (v & 0x4000) {
@@ -79,7 +77,7 @@ int city_decompress (const uint16_t* in, uint16_t* out, size_t* outsz) {
 	}
 
 	out[outpos] = 0xFFFF;
-	printf("1: Decoded %#04X bytes into %#04X bytes.\n",inpos*2,outpos*2);
+	printf("1: Decoded %#04zX bytes into %#04zX bytes.\n",inpos*2,outpos*2);
 	if (outsz) *outsz = outpos*2;
 	return 0; //EOF
 
@@ -117,7 +115,7 @@ int city_decompress2 (const uint16_t* in, uint16_t* out, size_t* outsz) {
 	}
 
 	out[outpos] = 0xFFFF;
-	printf("2: Decoded %#04X bytes into %#04X bytes.\n",inpos*2,outpos*2);
+	printf("2: Decoded %#04zX bytes into %#04zX bytes.\n",inpos*2,outpos*2);
 	if (outsz) *outsz = outpos*2;
 	return 0; //EOF
 
@@ -163,7 +161,7 @@ int city_decompress3 (const uint16_t* in, uint16_t* out, size_t* outsz) {
 	}
 
 	out[outpos] = 0xFFFF;
-	printf("3: Decoded %#04X bytes into %#04X bytes.\n",inpos*2,outpos*2);
+	printf("3: Decoded %#04zX bytes into %#04zX bytes.\n",inpos*2,outpos*2);
 	if (outsz) *outsz = outpos*2;
 	return 0; //EOF
 
@@ -232,7 +230,7 @@ int gfx_decompress (const uint8_t* in, uint8_t* out, size_t* outsz) {
 				break;
 
 			default:
-				printf("Unknown command byte at %#04X: %02X -> %02X %02X %02X\n",incur - in,v,incur[1],incur[2],incur[3]);
+				printf("Unknown command byte at %#04zX: %02X -> %02X %02X %02X\n",incur - in,v,incur[1],incur[2],incur[3]);
 				incur += 1;
 				//return 0;
 				break;
@@ -242,12 +240,11 @@ int gfx_decompress (const uint8_t* in, uint8_t* out, size_t* outsz) {
 
 	if (v == 0xFF) {
 
-		printf("Decoded %#04X bytes into %#04X bytes.\n",incur-in-1,outcur-out);
+		printf("Decoded %#04zX bytes into %#04zX bytes.\n",incur-in-1,outcur-out);
 		if (outsz) *outsz = (outcur-out);
 		return 0; //EOF
 	}
-
-
+	return 1;
 }
 
 int city_compress (const uint16_t* in, uint16_t* out, size_t* outsz, size_t max_outsz) {	
@@ -277,7 +274,7 @@ int city_compress (const uint16_t* in, uint16_t* out, size_t* outsz, size_t max_
 		}
 	}
 	out[outpos++] = 0xFFFF;
-	printf("C: Encoded %#04X bytes into %#04X bytes.\n",inpos*2,outpos*2);
+	printf("C: Encoded %#04zX bytes into %#04zX bytes.\n",inpos*2,outpos*2);
 	if (outsz) *outsz = outpos*2;
 	return 0; //EOF
 }
@@ -291,15 +288,15 @@ int loadsramcity (const char* sfname, uint16_t* citydata, int citynum, char* o_c
 
 	fseek(cityfile,cityoffset[citynum] + 0x66,SEEK_SET); // city name location
 
-	char cityname[9];
+	unsigned char cityname[9];
 	uint8_t namelen = 0;
 	fread(&namelen,1,1,cityfile);
 	fread(cityname,namelen,1,cityfile);
-	for (int i=0; i < namelen; i++) cityname[i] = namechars[cityname[i]];
+	for (uint8_t i=0; i < namelen; i++) cityname[i] = namechars[cityname[i]];
 	cityname[namelen] = 0;
 	printf("City name: %s\n",cityname);
 
-	if (o_cityname) strncpy(o_cityname, cityname, 9);
+	if (o_cityname) strncpy(o_cityname, (char*) cityname, 9);
 
 	uint8_t sramfile[CITYMAPLEN];
 	memset(sramfile,0xFF,CITYMAPLEN);	
@@ -311,8 +308,8 @@ int loadsramcity (const char* sfname, uint16_t* citydata, int citynum, char* o_c
 	uint16_t citytemp[CITYWIDTH * CITYHEIGHT];
 	uint16_t citytemp2[CITYWIDTH * CITYHEIGHT];
 	memset(citytemp,0,sizeof citytemp);
-	memset(citytemp2,0,sizeof citytemp);
-	memset(citydata,0,sizeof citydata);
+	memset(citytemp2,0,sizeof citytemp2);
+	memset(citydata,0,CITYWIDTH * CITYHEIGHT * 2);
 
 	size_t citysize = 0;
 
@@ -321,6 +318,7 @@ int loadsramcity (const char* sfname, uint16_t* citydata, int citynum, char* o_c
 	city_decompress3((const uint16_t*)citytemp2,(uint16_t*)citydata,&citysize);
 
 	fclose(cityfile);
+	return 0;
 }
 
 int city2png (const char* sfname, const char* mfname, int citynum) {
@@ -332,7 +330,7 @@ int city2png (const char* sfname, const char* mfname, int citynum) {
 
 	fseek(cityfile,cityoffset[citynum] + 0x66,SEEK_SET); // city name location
 
-	char cityname[9];
+	unsigned char cityname[9];
 	uint8_t namelen = 0;
 	fread(&namelen,1,1,cityfile);
 	fread(cityname,namelen,1,cityfile);
@@ -363,6 +361,7 @@ int city2png (const char* sfname, const char* mfname, int citynum) {
 	write_png_map(mfname,citydata);
 
 	fclose(cityfile);
+	return 0;
 }
 int vtile(int x, int y) { return ( (y >= 0) && (y < CITYHEIGHT) && (x >= 0) && (x < CITYWIDTH) ); }
 
@@ -389,7 +388,7 @@ int check_ntile_a(uint16_t* citydata, int y, int x, uint16_t* tiles) {
 		if (citydata[y*CITYWIDTH+x] == *ctile) return 1;
 		ctile++;
 	}
-
+	return 2;
 }
 
 int check_ntile(uint16_t* citydata, int y, int x, uint16_t tmin, uint16_t tmax) {
@@ -573,6 +572,8 @@ int simple_coast_fit (uint16_t* city, uint8_t ix, uint8_t iy, uint16_t v, int im
 	if ((n & N_W) && (~n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0xA; //S
 	if ((~n & N_W) && (~n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x9; //SW
 	if ((~n & N_W) && (n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x7; //W
+
+	return 0;
 }
 
 int city_water_spread( uint16_t* city, uint8_t ix, uint8_t iy, uint16_t v, int improve_flags) {
@@ -617,6 +618,7 @@ int city_water_spread( uint16_t* city, uint8_t ix, uint8_t iy, uint16_t v, int i
 		if ((~n & N_W) && (~n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x9; //SW
 		if ((~n & N_W) && (n & N_S) && (n & N_N) && (n & N_E)) city[iy*CITYWIDTH+ix] = alttile + 0x7; //W
 	}
+	return 0;
 }
 
 void put_proper_road(uint16_t* city, uint8_t ix, uint8_t iy) {
@@ -709,12 +711,8 @@ int city_improve (uint16_t* city, int improve_flags) {
 
 			if ((improve_flags & 1) && (v == 0x00)) {
 
-				int alttile = ( rand() & 1 ) ? 8 : 0; //use alternative tile?
-
-				if (improve_flags & 16) {
-
-
-				} else city_water_spread(city,ix,iy,v,improve_flags);
+				if (!(improve_flags & 16)) 
+					city_water_spread(city,ix,iy,v,improve_flags);
 
 			} else if ((v >= 0x04) && (v <= 0x13)) {
 
@@ -775,7 +773,7 @@ int city_improve (uint16_t* city, int improve_flags) {
 			}
 		}
 	}	
-
+	return 0;
 }
 
 int fixcksum (uint8_t* citysram) {
@@ -807,7 +805,7 @@ int fixcksum (uint8_t* citysram) {
 	for (int i=0; i < 2; i++) {
 		memcpy(citysram + cityheader[i] + 14,&hdrcksum,2); //checksum
 	}	
-
+	return 0;
 }
 
 int describe_cities (const char* sfname, char* city1, char* city2) {
@@ -870,6 +868,7 @@ int fixsram(const char* sfname) {
 	fwrite(citysram,0x8000,1,cityfile);
 
 	fclose(cityfile);	
+	return 0;
 }
 
 int replace_city(const char* sfname, const uint16_t* citydata, int citynum) {
@@ -910,6 +909,7 @@ int replace_city(const char* sfname, const uint16_t* citydata, int citynum) {
 	fwrite(citysram,0x8000,1,cityfile);
 
 	fclose(cityfile);	
+	return 0;
 }
 
 int write_new_city(const char* sfname, const uint16_t* citydata, const char* cityname, int citynum) {
@@ -954,8 +954,8 @@ int write_new_city(const char* sfname, const uint16_t* citydata, const char* cit
 	size_t namelen = (strlen(cityname) < 8) ? strlen(cityname) : 8;
 
 	for (int i=0; i < namelen; i++) {
-		char* x = strchr(namechars,cityname[i]);
-		if (x) convname[i] = (x - namechars); else convname[i] = 0x27;
+		char* x = strchr((char*)namechars,cityname[i]);
+		if (x) convname[i] = (x - (char*)namechars); else convname[i] = 0x27;
 	}
 
 	*(uint8_t*)(citysram + cityoffset[citynum] + 0x66) = namelen; //city name length

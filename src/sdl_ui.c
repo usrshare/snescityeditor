@@ -31,14 +31,14 @@ SDL_Texture* tex = 0; //screen texture (OUTPUTWxOUTPUTH)
 uint32_t ticks = 0;
 uint32_t framecnt = 0;
 
-unsigned int win_w = 640;
-unsigned int win_h = 480;
+int win_w = 640;
+int win_h = 480;
 SDL_Rect viewport = {.x = 0, .y = 0, .w = 640, .h = 480};
 
 struct mousecoord mousecoords;
 
-uint8_t keyboard_buffer[16];
-uint8_t keys_held[16];
+char keyboard_buffer[16];
+char keys_held[16];
 uint8_t kbd_open = 0;
 
 int got_drop = 0;
@@ -122,8 +122,8 @@ uint8_t open_kbd(uint8_t state) {
 	return r;
 }
 
-uint8_t read_kbd(void) {
-	uint8_t r = keyboard_buffer[0];
+char read_kbd(void) {
+	char r = keyboard_buffer[0];
 	if (r) strdel(keyboard_buffer,r);
 	return r;
 }
