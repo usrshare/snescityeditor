@@ -133,7 +133,6 @@ enum ui_operations {
     OP_CREATENEW, // create new SRAM based on map
     OP_MAP_TO_SRAM, // save map into existing SRAM
     OP_MAP_TO_PNG, // save map as PNG
-    OP_EXIT
 };
 
 enum import_modes {
@@ -938,8 +937,6 @@ void ui_updatefunc(void) {
 
 			    break; }
 	case UI_SAVING: {
-			    box(6,8,64,30,18,1);
-
 			    msgbox("Now saving...",65535);
 
 			    int r = 0;
@@ -968,7 +965,6 @@ void ui_updatefunc(void) {
 				msgbox(errormsg, 300);
 				sdl_ui_mode = UI_EDITOR;
 			    } else {
-				char errormsg[64];
 				msgbox("Save completed.",300);
 				sdl_ui_mode = UI_EDITOR; 
 			    }
