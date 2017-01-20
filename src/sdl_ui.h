@@ -31,7 +31,7 @@ uint8_t open_kbd(uint8_t state);
 
 int sdl_ui_main(cb_noparam mainfunc, cb_noparam updatefunc);
 
-int sdl_ui_menu(int choice_c, char** choice_v, int sy);
+int sdl_ui_menu(int choice_c, char** choice_v);
 
 int getdrop(char* filename, size_t fnlen);
 int fillrect(uint32_t color, uint8_t x, uint8_t y, uint8_t w, uint8_t h);

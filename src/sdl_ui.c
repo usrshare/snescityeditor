@@ -210,24 +210,25 @@ int s_addstr_c(const char* text, uint8_t y, uint8_t font) {
 	return s_addstr(text, 128 - (strlen(text)*4), y, font);
 }
 
-int sdl_ui_menu(int choice_c, char** choice_v, int sy) {
+int sdl_ui_menu(int choice_c, char** choice_v) {
 
 	menu_cnt = choice_c;
+	int sy = 136 - (choice_c * 12);
 
 	for (int i=0; i < choice_c; i++) {
-		s_addstr(choice_v[i],48,sy+(16*i),0);
+		s_addstr(choice_v[i],48,sy+(24*i),0);
 	}
 
 	struct mousecoord m = get_mouse();
-	if ((m.x >= 32) && (m.x < 224) && (m.y >= 80) && (m.y < (sy + (16*choice_c))) ) menu_foc = ((m.y - sy) / 16); else menu_foc = -1;
+	if ((m.x >= 32) && (m.x < 224) && (m.y >= 80) && (m.y < (sy + (24*choice_c))) && ( ((m.y - sy) % 24) < 16) ) menu_foc = ((m.y - sy) / 24); else menu_foc = -1;
 
 	for (int i=0; i < choice_c; i++) {
 
 		if (menu_foc == i) {
-			spr(9,32,sy+(16*i),1,2);
+			spr(9,32,sy+(24*i),1,2);
 		} else {
-			spr(23,32,sy+(16*i),1,1);
-			spr(23,32,sy+(16*i)+8,1,1);
+			spr(23,32,sy+(24*i),1,1);
+			spr(23,32,sy+(24*i)+8,1,1);
 		}
 
 	}

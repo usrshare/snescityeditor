@@ -25,6 +25,9 @@ uint16_t citytiles_trans[CITYWIDTH*CITYHEIGHT];
 
 int city_modified = 0;
 
+char msgtext[64];
+uint16_t msgtimer = 0;
+
 // editor-related parameters
 
 int16_t edit_scrollx = -1;
@@ -50,6 +53,12 @@ int16_t holddiff_x = 0, holddiff_y = 0;
 int16_t scrdiff_x = 0, scrdiff_y = 0;
 
 uint8_t oldtilepos_x = 0, oldtilepos_y = 0;
+
+void msgbox(const char* text, uint16_t timer) {
+
+    strncpy(msgtext,text,63);
+    msgtimer = timer;
+}
 
 void fillspr(uint16_t s, uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
 
@@ -115,10 +124,8 @@ enum ui_modes {
     UI_RENAME,
     UI_EDITOR,
     UI_SAVEMENU,
-    UI_PROCESSING,
-    UI_SUCCESS,
+    UI_SAVING,
     UI_EXITMENU,
-    UI_ERROR
 };
 
 enum ui_operations {
@@ -181,10 +188,9 @@ uint16_t citysprite(uint16_t tile) {
 
     switch(tile) {
 	case 0x00: return 16;
-	case 0x01:
-	case 0x02: return 71; //water
-	case 0x03: return 52; //water with path for ships
-		   //shores
+	case 0x01: return 71;
+	case 0x02: return 52; //water
+	case 0x03: return 71; //water with path for ships
 	case 0x0c:
 	case 0x04: return 54;
 	case 0x0d:
@@ -500,7 +506,7 @@ void ui_updatefunc(void) {
 				  MM_EXIT
 			      };
 
-			      int r = sdl_ui_menu(4,(char* []){"Open map editor","Load map from PNG","Load map from SRAM","Exit"},80);
+			      int r = sdl_ui_menu(4,(char* []){"Open map editor","Load map from PNG","Load map from SRAM","Exit"});
 
 			      if (r == MM_EMPTY) { sdl_ui_mode = UI_EDITOR; }
 			      if (r == MM_LOAD_PNG) { sdl_ui_mode = UI_DROPPNG; cityname[0] = 0; sdl_ui_operation = OP_LOADING; }
@@ -518,10 +524,10 @@ void ui_updatefunc(void) {
 				  SM_BACK
 			      };
 
-			      int r = sdl_ui_menu(4,(char* []){"Save map as PNG","Save into new SRAM","Save into existing SRAM","Continue editing"},80);
+			      int r = sdl_ui_menu(4,(char* []){"Save map as PNG","Save into new SRAM","Save into existing SRAM","Continue editing"});
 
-			      if (r == SM_SAVE_PNG) { sdl_ui_operation = OP_MAP_TO_PNG; sdl_ui_mode = UI_PROCESSING; }
-			      if (r == SM_NEW_SRAM) { sdl_ui_operation = OP_CREATENEW; sdl_ui_mode = UI_PROCESSING; }
+			      if (r == SM_SAVE_PNG) { sdl_ui_operation = OP_MAP_TO_PNG; sdl_ui_mode = UI_SAVING; }
+			      if (r == SM_NEW_SRAM) { sdl_ui_operation = OP_CREATENEW; sdl_ui_mode = UI_SAVING; }
 			      if (r == SM_EXIST_SRAM) { sdl_ui_operation = OP_MAP_TO_SRAM; sdl_ui_mode = UI_DROPSRAM; }
 			      if (r == SM_BACK) { sdl_ui_mode = UI_EDITOR; }
 
@@ -532,7 +538,7 @@ void ui_updatefunc(void) {
 			      box(13,8,64,30,18,1);
 
 			      s_addstr_c("Drag your SRAM file",80,1);
-			      s_addstr_c("into this window",96,1);
+			      s_addstr_c("into this window.",96,1);
 
 			      if (getdrop(city_fname,PATH_MAX))
 				  sdl_ui_mode = UI_SELCITY;
@@ -548,20 +554,29 @@ void ui_updatefunc(void) {
 
 			     int r = describe_cities(city_fname,city1,city2);
 
-			     if (r != 0) sdl_ui_mode = UI_ERROR;
+			     if (r != 0) {
+				 msgbox("Unable to load the\nSRAM file.",300);
+				 r = UI_MAINMENU;
+			     }
 
-			     r = sdl_ui_menu(3,(char* []){city1,city2,"Back"},80);
-			     if (r >= 0) {
+			     r = sdl_ui_menu(3,(char* []){city1,city2,"Back"});
+			     if ((r >= 0) && (r < 2)) {
 				 citynum = r;
 
 				 if (sdl_ui_operation == OP_LOADING) {
 
-				     loadsramcity(city_fname,citytiles,citynum,cityname);
-				     sdl_ui_mode = UI_SAVEMENU;
+				     int r = loadsramcity(city_fname,citytiles,citynum,cityname);
+				     if (r) {
+					 msgbox("Unable to load the city.",300);
+					 sdl_ui_mode = UI_MAINMENU;
+				     } else {
+					 msgbox("City loaded successfully.",300);
+					 sdl_ui_mode = UI_EDITOR;
+				     }
 
 				 } else {
 
-				     sdl_ui_mode = UI_PROCESSING;
+				     sdl_ui_mode = UI_SAVING;
 				 }
 			     }
 
@@ -574,14 +589,18 @@ void ui_updatefunc(void) {
 			     // drop png file here
 
 			     s_addstr_c("Drag your PNG map file",80,1);
-			     s_addstr_c("into this window",96,1);
+			     s_addstr_c("into this window.",96,1);
 
 			     if (getdrop(map_fname,PATH_MAX)) {
-				 read_png_map(map_fname,citytiles);
-				 transform_city = 1;
-				 sdl_ui_mode = UI_OPTIONS;
-				 sdl_back_mode = UI_DROPPNG;
-				 import_mode = 0;
+				 int r = read_png_map(map_fname,citytiles);
+				 if (r) {
+				     msgbox("Unable to load the map.",300);
+				     sdl_ui_mode = UI_MAINMENU;
+				 } else {
+				     msgbox("Map loaded successfully.",300);
+				     sdl_ui_mode = UI_EDITOR;
+				     import_mode = 0;
+				 }
 			     }
 
 			     if (button(58,"BACK",176,184,7)) sdl_ui_mode = UI_MAINMENU;
@@ -822,7 +841,6 @@ void ui_updatefunc(void) {
 				 memset(cityrename,0,9);
 				 strcpy(cityrename,cityname);
 				 sdl_ui_mode = UI_RENAME;
-				 sdl_back_mode = UI_OPTIONS;
 			     }
 
 			     if (button(58,"Edit",176,132,7)) {
@@ -914,46 +932,49 @@ void ui_updatefunc(void) {
 
 			    if ((k == '\b') && (strlen(cityrename) != 0)) cityrename[strlen(cityrename)-1] = 0;
 			    if ((k >= 32) && (strlen(cityrename) < 8) && (strchr(citychars,k)) ) { cityrename[strlen(cityrename)+1] = 0; cityrename[strlen(cityrename)] = k; }
-			    if (k == 13) { open_kbd(0); city_modified = 1; strcpy(cityname,cityrename); sdl_ui_mode = sdl_back_mode; }
-			    if (k == '\033') { open_kbd(0); sdl_ui_mode = sdl_back_mode; }
+			    if (k == 13) { open_kbd(0); city_modified = 1; strcpy(cityname,cityrename); sdl_ui_mode = UI_OPTIONS; }
+			    if (k == '\033') { open_kbd(0); sdl_ui_mode = UI_OPTIONS; }
 			    if (k == '\177') memset(cityrename,0,9);
 
 			    break; }
-	case UI_PROCESSING: {
-				box(6,8,64,30,18,1);
+	case UI_SAVING: {
+			    box(6,8,64,30,18,1);
 
-				s_addstr_c("Now processing...",160,0);
+			    msgbox("Now saving...",65535);
 
-				int r = 0;
-				switch (sdl_ui_operation) {
-				    case OP_CREATENEW:
-					if (strlen(cityname) == 0) strcpy(cityname,"SNESCITY");
-					strcpy(newfile,cityname);
-					strcat(newfile,".srm");
-					r = write_new_city(newfile,citytiles,cityname,0);
-					break;
-				    case OP_MAP_TO_SRAM: r = replace_city(city_fname,citytiles,citynum);
-							 break;
-				    case OP_MAP_TO_PNG: 
-							 if (strlen(cityname) == 0) strcpy(cityname,"SNESCITY");
-							 strcpy(newfile,cityname);
-							 strcat(newfile,".png");
-							 r = write_png_map (newfile, citytiles);
-							 break;
-				}
-				city_modified = 0;
-				sdl_ui_mode = r ? UI_ERROR : UI_SUCCESS;
-				// working...
-				break; }
-	case UI_SUCCESS: {
+			    int r = 0;
+			    switch (sdl_ui_operation) {
+				case OP_CREATENEW:
+				    if (strlen(cityname) == 0) strcpy(cityname,"SNESCITY");
+				    strcpy(newfile,cityname);
+				    strcat(newfile,".srm");
+				    r = write_new_city(newfile,citytiles,cityname,0);
+				    break;
+				case OP_MAP_TO_SRAM: r = replace_city(city_fname,citytiles,citynum);
+						     break;
+				case OP_MAP_TO_PNG: 
+						     if (strlen(cityname) == 0) strcpy(cityname,"SNESCITY");
+						     strcpy(newfile,cityname);
+						     strcat(newfile,".png");
+						     r = write_png_map (newfile, citytiles);
+						     break;
+			    }
+			    city_modified = 0;
 
-			     box(6,8,64,30,18,1);
+			    if (r) {
+				char errormsg[64];
+				strcpy(errormsg,"Unable to save.\n");
+				strcat(errormsg,city_lasterror);
+				msgbox(errormsg, 300);
+				sdl_ui_mode = UI_EDITOR;
+			    } else {
+				char errormsg[64];
+				msgbox("Save completed.",300);
+				sdl_ui_mode = UI_EDITOR; 
+			    }
 
-			     s_addstr_c("success.",112,0);
-
-			     if (button(58,"BACK",176,184,7)) sdl_ui_mode = UI_MAINMENU;
-			     // operation successful
-			     break; }
+			    // working...
+			    break; }
 	case UI_EXITMENU: {
 			      box(6,64,64,16,8,1);
 			      spr(368,76,76,14,1);
@@ -972,17 +993,12 @@ void ui_updatefunc(void) {
 
 
 			      break; }
-	case UI_ERROR: {
+    }
 
-			   box(6,8,64,30,18,1);
-
-			   s_addstr_c("error.",112,0);
-
-			   s_addstr_c(city_lasterror,136,0);
-
-			   if (button(58,"BACK",176,184,7)) sdl_ui_mode = UI_MAINMENU;
-			   // error
-			   break; }
+    if (msgtimer) {
+	box(324,16,176,28,4,1);
+	s_addstr(msgtext,24,184,1);
+	msgtimer--;
     }
 
 
