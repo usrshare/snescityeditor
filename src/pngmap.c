@@ -244,9 +244,9 @@ int read_png_map(const char* pngname, uint16_t* citydata) {
 	uint32_t d_w = png_get_image_width(png_ptr, info_ptr);
 	uint32_t d_h = png_get_image_height(png_ptr, info_ptr);
 
-	if ((d_w != 120) || (d_h != 100)) {
+	if ((d_w != CITYWIDTH) || (d_h != CITYHEIGHT)) {
 		fprintf(stderr, "This image is not a valid city map.\n"
-			        "City maps have a resolution of 120x100 pixels.\n");
+			        "City maps have a resolution of " STRINGIFY(CITYWIDTH) "x" STRINGIFY(CITYHEIGHT) " pixels.\n");
 		return 1;}
 
 	int d_col = png_get_color_type(png_ptr, info_ptr);
@@ -266,7 +266,7 @@ int read_png_map(const char* pngname, uint16_t* citydata) {
 
 			uint32_t rgb = (d_rowptrs[iy][ix*3] << 16) + (d_rowptrs[iy][ix*3+1] << 8) + d_rowptrs[iy][ix*3+2];
 			uint16_t blk = 0xFFFF; for (int i=0; i < pngcolor_c; i++) if (rgb == pngcolors[i]) {blk = i; citydata[iy * CITYWIDTH + ix] = i; break; }
-			if ((blk == 0xFFFF) && (rgb & 0xFF0000)) blk = (rgb & 0xFFFF); citydata[iy * CITYWIDTH + ix] = blk;
+			if ((blk == 0xFFFF) && (rgb & 0xFF0000)) { blk = (rgb & 0xFFFF); citydata[iy * CITYWIDTH + ix] = blk; }
 			if (blk == 0xFFFF) citydata[iy*CITYWIDTH+ix] = 0x0000;
 		}
 	}

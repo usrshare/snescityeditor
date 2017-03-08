@@ -149,8 +149,8 @@ int city_decompress3 (const uint16_t* in, uint16_t* out, size_t* outsz) {
 
 			for (int i=0; i < c; i++) {
 				out[outpos+i] = v+i;
-				out[outpos+120+i] = v+i+3;
-				out[outpos+240+i] = v+i+6;
+				out[outpos+CITYWIDTH+i] = v+i+3;
+				out[outpos+(CITYWIDTH*2)+i] = v+i+6;
 			}
 			inpos++;
 			outpos += 3;

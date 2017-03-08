@@ -324,7 +324,8 @@ bool tile_rail(uint8_t x, uint8_t y) {
 
 uint16_t add_water(uint16_t c1, uint16_t c2) {
 
-    if (c1 == 0) return c2; if (c2 == 0) return c1;
+    if (c1 == 0) return c2;
+    if (c2 == 0) return c1;
     if ((c1 >= 1) || (c1 <= 3)) return c1;
     if ((c2 >= 1) || (c2 <= 3)) return c2;
 }
@@ -754,8 +755,10 @@ void ui_updatefunc(void) {
 				if ((holddiff_x - scrdiff_x) != 0 ) { edit_scrollx -= (holddiff_x - scrdiff_x); scrdiff_x = holddiff_x; }
 				if ((holddiff_y - scrdiff_y) != 0 ) { edit_scrolly -= (holddiff_y - scrdiff_y); scrdiff_y = holddiff_y; }
 
-				if (edit_scrollx < -64) edit_scrollx = -64; if (edit_scrollx > 96*8) edit_scrollx = 96*8;
-				if (edit_scrolly < -64) edit_scrolly = -64; if (edit_scrolly > 82*8) edit_scrolly = 82*8;
+				if (edit_scrollx < -64) edit_scrollx = -64;
+				if (edit_scrollx > (CITYWIDTH - 24)*8) edit_scrollx = (CITYWIDTH - 24)*8;
+				if (edit_scrolly < -64) edit_scrolly = -64;
+				if (edit_scrolly > (CITYHEIGHT - 18)*8) edit_scrolly = (CITYHEIGHT - 18)*8;
 
 				uint8_t xshift = ((mousecoords.x >= 200) && (mousecoords.y < 72)) ? 0 : 200;
 

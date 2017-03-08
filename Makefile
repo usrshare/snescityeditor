@@ -22,6 +22,10 @@ else
 DEFS += -g -O2
 endif
 
+ifdef EXPMODE
+DEFS += -DSCE_EXPMODE
+endif
+
 ifdef SDL_UI
 _OBJS += sdl_ui.o ui_menu.o
 DEFS += -DUSE_SDL_UI
