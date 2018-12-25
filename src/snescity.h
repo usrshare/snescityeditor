@@ -2,6 +2,12 @@
 #define SNESCITY_H
 #include <stdint.h>
 
+#ifdef SCE_EXPMODE
+#define NUMBER_OF_CITIES 1
+#else
+#define NUMBER_OF_CITIES 2
+#endif
+
 extern char* city_lasterror;
 
 int find_png_filename(const char* filename, char* o_f);
@@ -25,6 +31,7 @@ int city_water_fix (uint16_t* city, uint8_t ix, uint8_t iy, uint16_t v, int impr
 int city_water_spread( uint16_t* city, uint8_t ix, uint8_t iy, uint16_t v, int improve_flags);
 void put_proper_road(uint16_t* city, uint8_t ix, uint8_t iy);
 void put_proper_rail(uint16_t* city, uint8_t ix, uint8_t iy);
+void put_proper_power(uint16_t* city, uint8_t ix, uint8_t iy);
 void city_fix_forests (uint16_t* city, uint8_t ix, uint8_t iy);
 
 #endif

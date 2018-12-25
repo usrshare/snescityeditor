@@ -1,6 +1,6 @@
 The PNG files in this folder contain city maps based on real terrains. They are based on [OpenStreetMap](http://osm.org)'s map data and [Mapbox](https://mapbox.com/about/maps)'s custom styles (namely, a style that only displays rivers and parks/forests).
 
-After that, the map is resized to 120x100 and edited in order to make rivers/water areas contiguous and occasionally moving/resizing islands/peninsulas so that they can fit a 3x3 building.
+After that, the map is resized to 120x100 (SNES mode) and edited in order to make rivers/water areas contiguous and occasionally moving/resizing islands/peninsulas so that they can fit a 3x3 building.
 
 To use these maps properly, use the following command:
 

@@ -19,7 +19,7 @@ endif
 ifdef RELEASE
 DEFS += -xSSE3 -O3 -DNDEBUG
 else
-DEFS += -g -O2
+DEFS += -g -O0
 endif
 
 ifdef EXPMODE

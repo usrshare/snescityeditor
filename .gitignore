@@ -3,6 +3,8 @@ debug.bin
 snescityeditor
 snescityeditor.exe
 *.png
+*.sav
 *.srm
+*.nes
 *.smc
 *.swp

@@ -26,7 +26,6 @@ enum prgmode {
 	MODE_CREATE, //create new SRAM file from PNG map
 };
 
-
 void exit_usage_error(char** argv) {
 	printf("Usage: %s -<ceif> [-2] [-x #] [-n cityname] snescity.srm [citymap.png]\n"
 			" -c: create an SRAM file based on PNG map\n"

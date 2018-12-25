@@ -39,6 +39,7 @@ enum brushtypes {
     BT_FOREST,
     BT_ROAD,
     BT_RAIL,
+    BT_POWER,
     BT_TILE,
     BT_PICKER,
     BT_COUNT
@@ -109,7 +110,11 @@ void ui_initfunc(void) {
 
     for (int iy=0; iy < 14; iy++) for (int ix=0; ix<16; ix++) spr(4,ix*16,iy*16,2,2);
 
+#ifdef SCE_EXPMODE
+    s_addstr_c("NESCITYEDITOR",32,0);
+#else
     s_addstr_c("SNESCITYEDITOR",32,0);
+#endif
 
     //menu backdrop
 
@@ -239,6 +244,20 @@ uint16_t citysprite(uint16_t tile) {
 	case 0x3a: return 0xab;
 	case 0x3b: return 0xbc;
 	case 0x3c: return 0xbb;
+	
+	case 0x60: return 0xfb; //pwr bridge H
+	case 0x61: return 0xfc; //pwr bridge V
+	case 0x62: return 0xdc;
+	case 0x63: return 0xdd;
+	case 0x64: return 0xde;
+	case 0x65: return 0xdf;
+	case 0x66: return 0xec;
+	case 0x67: return 0xed;
+	case 0x68: return 0xee;
+	case 0x69: return 0xef;
+	case 0x6a: return 0xf3;
+	case 0x6b: return 0xf4;
+	case 0x6c: return 0xf5;
 
 	case 0x70: return 0xf9; //rail bridge H
 	case 0x71: return 0xfa; //rail bridge V
@@ -322,6 +341,12 @@ bool tile_rail(uint8_t x, uint8_t y) {
     return ((tile >= 0x70) && (tile <= 0x7c));
 }
 
+bool tile_power(uint8_t x, uint8_t y) {
+    if ( (x >= CITYWIDTH) || (y >= CITYHEIGHT) ) return false;
+    uint16_t tile = citytiles[y * CITYWIDTH + x];
+    return ((tile >= 0x60) && (tile <= 0x6c));
+}
+
 uint16_t add_water(uint16_t c1, uint16_t c2) {
 
     if (c1 == 0) return c2;
@@ -367,6 +392,17 @@ void edit_spreadrail(uint8_t x, uint8_t y) {
 
 }
 
+void edit_spreadpower(uint8_t x, uint8_t y) {
+
+    put_proper_power(citytiles,x,y);
+
+    if (tile_power(x,y-1)) put_proper_power(citytiles,x,y-1); 
+    if (tile_power(x-1,y)) put_proper_power(citytiles,x-1,y); 
+    if (tile_power(x+1,y)) put_proper_power(citytiles,x+1,y); 
+    if (tile_power(x,y+1)) put_proper_power(citytiles,x,y+1); 
+
+}
+
 void edit_spreadfix2(int8_t x, int8_t y, int8_t w, int8_t h) {
 
     citycoord coords[w*h];
@@ -387,6 +423,7 @@ void edit_spreadfix2(int8_t x, int8_t y, int8_t w, int8_t h) {
 	else if (tile_forest(n.x,n.y)) city_fix_forests(citytiles,n.x,n.y);
 	else if (tile_road(n.x,n.y)) put_proper_road(citytiles,n.x,n.y);
 	else if (tile_rail(n.x,n.y)) put_proper_rail(citytiles,n.x,n.y);
+	else if (tile_power(n.x,n.y)) put_proper_power(citytiles,n.x,n.y);
     }
 }
 
@@ -550,7 +587,7 @@ void ui_updatefunc(void) {
 
 			     box(6,8,64,30,18,1);
 
-			     char city1[17], city2[17];
+			     char city1[24], city2[24];
 
 			     int r = describe_cities(city_fname,city1,city2);
 
@@ -558,9 +595,12 @@ void ui_updatefunc(void) {
 				 msgbox("Unable to load the\nSRAM file.",300);
 				 r = UI_MAINMENU;
 			     }
-
+#ifdef SCE_EXPMODE
+			     r = sdl_ui_menu(2,(char* []){city1,"Back"});
+#else
 			     r = sdl_ui_menu(3,(char* []){city1,city2,"Back"});
-			     if ((r >= 0) && (r < 2)) {
+#endif
+			     if ((r >= 0) && (r < NUMBER_OF_CITIES)) {
 				 citynum = r;
 
 				 if (sdl_ui_operation == OP_LOADING) {
@@ -580,7 +620,7 @@ void ui_updatefunc(void) {
 				 }
 			     }
 
-			     if (r == 2) sdl_ui_mode = UI_MAINMENU;
+			     if (r == NUMBER_OF_CITIES) sdl_ui_mode = UI_MAINMENU;
 			     // select city 1 or 2
 			     break; }
 	case UI_DROPPNG: {
@@ -635,6 +675,7 @@ void ui_updatefunc(void) {
 				case BT_FOREST: ctilespr = 34; break;
 				case BT_ROAD: ctilespr = 35; break;
 				case BT_RAIL: ctilespr = 36; break;
+				case BT_POWER: ctilespr = 0x49; break;
 				case BT_TILE: ctilespr = citysprite(curtile); break;
 				case BT_PICKER: ctilespr = 81; break;
 			    }
@@ -684,11 +725,13 @@ void ui_updatefunc(void) {
 				if (editbutton(34,48,0)) brushtype = BT_FOREST; //forest
 				if (editbutton(35,64,0)) brushtype = BT_ROAD; //road
 				if (editbutton(36,80,0)) brushtype = BT_RAIL; //rail
-				if (editbutton(37,96,0)) { brushtype = BT_TILE; tilepalette = 1; } //custom tile
+				if (editbutton(0x49,96,0)) brushtype = BT_POWER; //power
+
+				if (editbutton(37,112,0)) { brushtype = BT_TILE; tilepalette = 1; } //custom tile
 
 
-				if (editbutton(smoothmode ? 69 : 68,112,0)) smoothmode = !smoothmode; //smooth mode
-				if (editbutton(81,128,0)) brushtype = BT_PICKER; //tile picker
+				if (editbutton(smoothmode ? 69 : 68,128,0)) smoothmode = !smoothmode; //smooth mode
+				if (editbutton(81,144,0)) brushtype = BT_PICKER; //tile picker
 
 				if (editbutton(57,192,0)) { transform_city = 1; sdl_ui_mode = UI_OPTIONS; sdl_back_mode = UI_EDITOR; } //options
 				if (editbutton(83,208,0)) sdl_ui_mode = UI_MAINMENU; //load
@@ -738,6 +781,9 @@ void ui_updatefunc(void) {
 
 					case BT_RAIL: citytiles[CITYWIDTH*tilepos_y + tilepos_x] = ( tile_waterbridge(tilepos_x, tilepos_y) ? 0x70 : 0x72 );
 						      edit_spreadrail(tilepos_x,tilepos_y); break;
+					
+					case BT_POWER: citytiles[CITYWIDTH*tilepos_y + tilepos_x] = ( tile_waterbridge(tilepos_x, tilepos_y) ? 0x60 : 0x62 );
+						      edit_spreadpower(tilepos_x,tilepos_y); break;
 
 					case BT_TILE: citytiles[CITYWIDTH*tilepos_y + tilepos_x] = curtile; break;	      
 
@@ -807,7 +853,11 @@ void ui_updatefunc(void) {
 			     box(10,32,80,17,15,1);
 
 			     strcpy(newfile,map_fname);
+#ifdef SCE_EXPMODE
+			     strcat(newfile,".sav");
+#else
 			     strcat(newfile,".srm");
+#endif
 			     find_png_filename(map_fname,cityname);
 
 			     for (int i=0; i < 8; i++) cityname[i] = toupper(cityname[i]);
@@ -947,7 +997,11 @@ void ui_updatefunc(void) {
 				case OP_CREATENEW:
 				    if (strlen(cityname) == 0) strcpy(cityname,"SNESCITY");
 				    strcpy(newfile,cityname);
+#ifdef SCE_EXPMODE
+				    strcat(newfile,".sav");
+#else
 				    strcat(newfile,".srm");
+#endif
 				    r = write_new_city(newfile,citytiles,cityname,0);
 				    break;
 				case OP_MAP_TO_SRAM: r = replace_city(city_fname,citytiles,citynum);

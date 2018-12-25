@@ -2,8 +2,8 @@
 #define DEFINES_H
 
 #ifdef SCE_EXPMODE
-#define CITYWIDTH 96
-#define CITYHEIGHT 80
+#define CITYWIDTH 76
+#define CITYHEIGHT 76
 #else
 #define CITYWIDTH 120
 #define CITYHEIGHT 100

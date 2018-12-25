@@ -1,6 +1,6 @@
 # snescityeditor
 
-**snescityeditor** is a small program designed to create/edit maps for the Super NES version of SimCity by modifying SRAM save files.
+**snescityeditor** is a small program designed to create/edit maps for the NES and Super NES versions of SimCity by modifying SRAM save files.
 
 # Compilation/Installation
 
