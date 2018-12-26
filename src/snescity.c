@@ -66,7 +66,6 @@ char* city_lasterror = "no error.";
 #define CITYMAPSTART 0x0078 //offset for the city map: 120 bytes (before that is graph data)
 #define CITYMAPLEN 0x1690 //the size of city data
 #define CITYNAMEOFFSET (CITYMAPSTART + CITYMAPLEN) //offset for city name
-#define CITYMAXLEN 10 //maximum city length
 #else
 
 #define SRAM_OFFSET 0
@@ -75,7 +74,6 @@ char* city_lasterror = "no error.";
 #define CITYMAPSTART 0xBF0 //offset for the city map
 #define CITYMAPLEN 0x3400 //size of the city map
 #define CITYNAMEOFFSET 0x66 //offset for city name
-#define CITYMAXLEN 8 //maximum city length
 #endif
 
 int find_png_filename(const char* filename, char* o_f) {
