@@ -22,8 +22,8 @@ else
 DEFS += -g -O0
 endif
 
-ifdef EXPMODE
-DEFS += -DSCE_EXPMODE
+ifdef NESMODE
+DEFS += -DNESMODE
 endif
 
 ifdef SDL_UI

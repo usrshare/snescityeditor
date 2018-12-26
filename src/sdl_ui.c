@@ -182,6 +182,7 @@ int s_addstr(const char* text, uint8_t x, uint8_t y, uint8_t font) {
 					switch (font) {
 						case 0:
 							si = 96 + (ci/16) * 32 + (ci % 16);
+							if (*tchar == ':') si = 0x109;
 							spr(si,cx,cy,1,2);
 							break;
 						case 1:
@@ -190,6 +191,7 @@ int s_addstr(const char* text, uint8_t x, uint8_t y, uint8_t font) {
 							break;
 						case 2:
 							si = 960 + ci;
+							if (*tchar == ':') si = 960 + 71;
 							spr4(si,cx,cy,1,1);
 							break;
 					}

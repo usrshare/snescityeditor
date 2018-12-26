@@ -13,8 +13,8 @@
 char city_fname[PATH_MAX], map_fname[PATH_MAX];
 
 char newfile[PATH_MAX];
-char cityname[9];
-char cityrename[9];
+char cityname[CITYMAXLEN];
+char cityrename[CITYMAXLEN];
 
 int citynum = 0;
 
@@ -110,7 +110,7 @@ void ui_initfunc(void) {
 
     for (int iy=0; iy < 14; iy++) for (int ix=0; ix<16; ix++) spr(4,ix*16,iy*16,2,2);
 
-#ifdef SCE_EXPMODE
+#ifdef NESMODE
     s_addstr_c("NESCITYEDITOR",32,0);
 #else
     s_addstr_c("SNESCITYEDITOR",32,0);
@@ -345,14 +345,6 @@ bool tile_power(uint8_t x, uint8_t y) {
     if ( (x >= CITYWIDTH) || (y >= CITYHEIGHT) ) return false;
     uint16_t tile = citytiles[y * CITYWIDTH + x];
     return ((tile >= 0x60) && (tile <= 0x6c));
-}
-
-uint16_t add_water(uint16_t c1, uint16_t c2) {
-
-    if (c1 == 0) return c2;
-    if (c2 == 0) return c1;
-    if ((c1 >= 1) || (c1 <= 3)) return c1;
-    if ((c2 >= 1) || (c2 <= 3)) return c2;
 }
 
 uint16_t tile_equality[] = {
@@ -595,7 +587,7 @@ void ui_updatefunc(void) {
 				 msgbox("Unable to load the\nSRAM file.",300);
 				 r = UI_MAINMENU;
 			     }
-#ifdef SCE_EXPMODE
+#ifdef NESMODE
 			     r = sdl_ui_menu(2,(char* []){city1,"Back"});
 #else
 			     r = sdl_ui_menu(3,(char* []){city1,city2,"Back"});
@@ -853,7 +845,7 @@ void ui_updatefunc(void) {
 			     box(10,32,80,17,15,1);
 
 			     strcpy(newfile,map_fname);
-#ifdef SCE_EXPMODE
+#ifdef NESMODE
 			     strcat(newfile,".sav");
 #else
 			     strcat(newfile,".srm");
@@ -921,7 +913,11 @@ void ui_updatefunc(void) {
 			    s_addstr(cityrename,96,88,0);
 			    if (framecnt & 16) spr(339, 96 + (8*strlen(cityrename)),96,1,1);
 
+#ifdef NESMODE
+			    const char* citychars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ,.-: ";
+#else
 			    const char* citychars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ,.- ";
+#endif
 
 			    uint8_t k = 0;
 
@@ -964,16 +960,21 @@ void ui_updatefunc(void) {
 			    if (button(58,"-",192,144,2)) k = '-';
 			    if (button(266,"OK",208,144,4)) k = 13;
 
-			    box(266,16,160,5,2,1);
-			    if (button(58,"Z",56,160,2)) k = 'Z';
-			    if (button(58,"X",72,160,2)) k = 'X';
-			    if (button(58,"C",88,160,2)) k = 'C';
-			    if (button(58,"V",104,160,2)) k = 'V';
-			    if (button(58,"B",120,160,2)) k = 'B';
-			    if (button(58,"N",136,160,2)) k = 'N';
-			    if (button(58,"M",152,160,2)) k = 'M';
-			    if (button(58,",",168,160,2)) k = ',';
-			    if (button(58,".",184,160,2)) k = '.';
+			    box(266,16,160,3,2,1);
+			    if (button(58,"Z",40,160,2)) k = 'Z';
+			    if (button(58,"X",56,160,2)) k = 'X';
+			    if (button(58,"C",72,160,2)) k = 'C';
+			    if (button(58,"V",88,160,2)) k = 'V';
+			    if (button(58,"B",104,160,2)) k = 'B';
+			    if (button(58,"N",120,160,2)) k = 'N';
+			    if (button(58,"M",136,160,2)) k = 'M';
+			    if (button(58,",",152,160,2)) k = ',';
+			    if (button(58,".",168,160,2)) k = '.';
+#ifdef NESMODE
+			    if (button(58,":",184,160,2)) k = ':';
+#else
+			    box(266,184,160,2,2,1);
+#endif
 			    if (button(266,"Back",200,160,5)) k = '\033';
 
 			    box(266,16,176,4,2,1);
@@ -997,7 +998,7 @@ void ui_updatefunc(void) {
 				case OP_CREATENEW:
 				    if (strlen(cityname) == 0) strcpy(cityname,"SNESCITY");
 				    strcpy(newfile,cityname);
-#ifdef SCE_EXPMODE
+#ifdef NESMODE
 				    strcat(newfile,".sav");
 #else
 				    strcat(newfile,".srm");

@@ -1,7 +1,7 @@
 #ifndef DEFINES_H
 #define DEFINES_H
 
-#ifdef SCE_EXPMODE
+#ifdef NESMODE
 #define CITYWIDTH 76
 #define CITYHEIGHT 76
 #else

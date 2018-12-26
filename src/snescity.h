@@ -2,10 +2,12 @@
 #define SNESCITY_H
 #include <stdint.h>
 
-#ifdef SCE_EXPMODE
+#ifdef NESMODE
 #define NUMBER_OF_CITIES 1
+#define CITYMAXLEN 10 //maximum city length
 #else
 #define NUMBER_OF_CITIES 2
+#define CITYMAXLEN 8 //maximum city length
 #endif
 
 extern char* city_lasterror;

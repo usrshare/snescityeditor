@@ -8,11 +8,11 @@
 #include "defines.h"
 #include "pngmap.h"
 
-#ifndef SCE_EXPMODE
+#ifndef NESMODE
 unsigned char* namechars = (unsigned char*) "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ,.- ";
 #endif
 
-#ifdef SCE_EXPMODE
+#ifdef NESMODE
 #define NUMBER_OF_CITIES 1
 const size_t cityheader[1] = {0x0865}; //actual SRAM data starts here.
 //the NES game actually stores temporary data in the first part of SRAM!
@@ -59,7 +59,7 @@ const char* months[] = {"???","JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","S
 
 char* city_lasterror = "no error.";
 
-#ifdef SCE_EXPMODE
+#ifdef NESMODE
 
 #define SRAM_OFFSET 0x0865 //offset for the actual SRAM
 
@@ -96,7 +96,7 @@ int find_png_filename(const char* filename, char* o_f) {
 	return strl;
 }
 
-#ifdef SCE_EXPMODE
+#ifdef NESMODE
 int city_convert_from_nes (const uint8_t* in, uint16_t* out) {
 
 	size_t inpos = 0, outpos = 0;
@@ -393,11 +393,11 @@ int loadsramcity (const char* sfname, uint16_t* citydata, int citynum, char* o_c
 	unsigned char cityname[CITYMAXLEN+1];
 	uint8_t namelen = 0;
 	fread(&namelen,1,1,cityfile);
-#ifdef SCE_EXPMODE
+#ifdef NESMODE
 	if (namelen > 0) namelen--;
 #endif
 	fread(cityname,namelen,1,cityfile);
-#ifdef SCE_EXPMODE
+#ifdef NESMODE
 #else
 	for (uint8_t i=0; i < namelen; i++) cityname[i] = namechars[cityname[i]];
 #endif
@@ -407,7 +407,7 @@ int loadsramcity (const char* sfname, uint16_t* citydata, int citynum, char* o_c
 	if (o_cityname) strncpy(o_cityname, (char*) cityname, CITYMAXLEN+1);
 
 	uint8_t sramfile[CITYMAPLEN];
-#ifdef SCE_EXPMODE
+#ifdef NESMODE
 
 	fseek(cityfile,cityoffset[citynum] + CITYMAPSTART,SEEK_SET);
 	fread(sramfile,CITYMAPLEN,1,cityfile);
@@ -451,7 +451,7 @@ int city2png (const char* sfname, const char* mfname, int citynum) {
 	uint8_t namelen = 0;
 	fread(&namelen,1,1,cityfile);
 	fread(cityname,namelen,1,cityfile);
-#ifdef SCE_EXPMODE
+#ifdef NESMODE
 #else
 	for (int i=0; i < namelen; i++) cityname[i] = namechars[cityname[i]];
 #endif
@@ -960,7 +960,7 @@ uint16_t _sum_calc(uint16_t cksum, uint8_t byte) {
 }
 
 int fixcksum (uint8_t* citysram) {
-#ifdef SCE_EXPMODE
+#ifdef NESMODE
 	uint16_t cksum = 0;
 
 	for (int i=SRAM_OFFSET + 0x2; i < 0x2000; i++) {
@@ -1018,8 +1018,8 @@ int describe_cities (const char* sfname, char* city1, char* city2) {
 	fclose(cityfile);
 
 	for (int ci=0; ci < NUMBER_OF_CITIES; ci++) {
-#ifdef SCE_EXPMODE
-		uint8_t city_exists = 1;
+#ifdef NESMODE
+		uint8_t city_exists = citysram[cityoffset[ci] + CITYNAMEOFFSET + 128];
 #else
 		uint8_t city_exists = citysram[0x5 + ci];
 #endif
@@ -1032,7 +1032,7 @@ int describe_cities (const char* sfname, char* city1, char* city2) {
 
 			uint16_t year;
 
-#ifdef SCE_EXPMODE
+#ifdef NESMODE
 			namelen--;
 			for (int i=0; i < namelen; i++) name[i] = citysram[cityoffset[ci] + CITYNAMEOFFSET + 1 + i];
 			name[namelen] = 0;
@@ -1045,10 +1045,10 @@ int describe_cities (const char* sfname, char* city1, char* city2) {
 
 
 
-			snprintf(ci ? city2 : city1, 17, "%d. %4d %s",ci+1,year,name);
+			snprintf(ci ? city2 : city1, 24, "%d. %4d %s",ci+1,year,name);
 		} else {
 
-			snprintf(ci ? city2 : city1, 17, "%d. ---- --------",ci+1);
+			snprintf(ci ? city2 : city1, 24, "%d. ---- --------",ci+1);
 		}
 
 	}
@@ -1082,7 +1082,7 @@ int fixsram(const char* sfname) {
 
 int replace_city(const char* sfname, const uint16_t* citydata, int citynum) {
 
-#ifdef SCE_EXPMODE
+#ifdef NESMODE
 
 	uint8_t citycomp[CITYMAPLEN];
 	memset(citycomp, 0x90, CITYMAPLEN);
@@ -1120,7 +1120,8 @@ int replace_city(const char* sfname, const uint16_t* citydata, int citynum) {
 	memcpy(citysram + cityoffset[citynum] + CITYMAPSTART, citycomp, citysize);
 	memset(citysram + cityoffset[citynum] + CITYMAPSTART + citysize, 0, CITYMAPLEN - citysize);
 
-#ifdef SCE_EXPMODE
+#ifdef NESMODE
+	citysram[cityoffset[0] + CITYNAMEOFFSET + 128] = 1; //1 means city exists
 #else
 	for (int i=0; i < 2; i++)
 		citysram[cityheader[i] + 5 + citynum] = 1; //1 means city exists
@@ -1136,7 +1137,7 @@ int replace_city(const char* sfname, const uint16_t* citydata, int citynum) {
 
 int write_new_city(const char* sfname, const uint16_t* citydata, const char* cityname, int citynum) {
 
-#ifdef SCE_EXPMODE
+#ifdef NESMODE
 	
 	uint8_t citycomp[CITYMAPLEN];
 	memset(citycomp, 0x90, CITYMAPLEN);
@@ -1166,22 +1167,22 @@ int write_new_city(const char* sfname, const uint16_t* citydata, const char* cit
 		city_lasterror = "unable to open city file.";
 		return 1; }
 
-#ifdef SCE_EXPMODE
+#ifdef NESMODE
 
 	*(uint16_t*)(citysram + cityoffset[citynum] + CITYNAMEOFFSET + 76) = 500; //overall city score
 
 	*(uint16_t*)(citysram + cityoffset[citynum] + CITYNAMEOFFSET + 78) = 20000; //money bits 0~15
-	*(uint8_t*)(citysram + cityoffset[citynum] + CITYNAMEOFFSET + 79) = 0; //money bits 16~23
+	*(uint8_t*)(citysram + cityoffset[citynum] + CITYNAMEOFFSET + 80) = 0; //money bits 16~23
 	
-	*(uint16_t*)(citysram + cityoffset[citynum] + CITYNAMEOFFSET + 80) = 1900; //year
-	*(uint8_t*)(citysram + cityoffset[citynum] + CITYNAMEOFFSET + 82) = 1; //month
-	*(uint8_t*)(citysram + cityoffset[citynum] + CITYNAMEOFFSET + 83) = 1; //week
-	*(uint8_t*)(citysram + cityoffset[citynum] + CITYNAMEOFFSET + 84) = 7; //tax rate
-	*(uint8_t*)(citysram + cityoffset[citynum] + CITYNAMEOFFSET + 85) = 9; //options: auto-bulldoze, BGM on
-	*(uint8_t*)(citysram + cityoffset[citynum] + CITYNAMEOFFSET + 86) = 0; //game speed
-	*(uint16_t*)(citysram + cityoffset[citynum] + CITYNAMEOFFSET + 91) = 0xFFFF; //year to bank
-	*(uint16_t*)(citysram + cityoffset[citynum] + CITYNAMEOFFSET + 93) = 0xFFFF; //year to expo
-	*(uint16_t*)(citysram + cityoffset[citynum] + CITYNAMEOFFSET + 95) = 0xFFFF; //year to liberty
+	*(uint16_t*)(citysram + cityoffset[citynum] + CITYNAMEOFFSET + 81) = 1900; //year
+	*(uint8_t*)(citysram + cityoffset[citynum] + CITYNAMEOFFSET + 83) = 0; //month
+	*(uint8_t*)(citysram + cityoffset[citynum] + CITYNAMEOFFSET + 84) = 0; //week
+	*(uint8_t*)(citysram + cityoffset[citynum] + CITYNAMEOFFSET + 85) = 7; //tax rate
+	*(uint8_t*)(citysram + cityoffset[citynum] + CITYNAMEOFFSET + 86) = 9; //options: auto-bulldoze, BGM on
+	*(uint8_t*)(citysram + cityoffset[citynum] + CITYNAMEOFFSET + 87) = 0; //game speed
+	*(uint16_t*)(citysram + cityoffset[citynum] + CITYNAMEOFFSET + 92) = 0xFFFF; //year to bank
+	*(uint16_t*)(citysram + cityoffset[citynum] + CITYNAMEOFFSET + 94) = 0xFFFF; //year to expo
+	*(uint16_t*)(citysram + cityoffset[citynum] + CITYNAMEOFFSET + 96) = 0xFFFF; //year to liberty
 
 #else
 	
@@ -1209,7 +1210,7 @@ int write_new_city(const char* sfname, const uint16_t* citydata, const char* cit
 	size_t namelen = (strlen(cityname) < CITYMAXLEN) ? strlen(cityname) : CITYMAXLEN;
 
 	for (int i=0; i < namelen; i++) {
-#ifdef SCE_EXPMODE
+#ifdef NESMODE
 		convname[i] = cityname[i];
 #else
 		char* x = strchr((char*)namechars,cityname[i]);
@@ -1218,7 +1219,7 @@ int write_new_city(const char* sfname, const uint16_t* citydata, const char* cit
 	}
 
 
-#ifdef SCE_EXPMODE
+#ifdef NESMODE
 	*(uint8_t*)(citysram + cityoffset[citynum] + CITYNAMEOFFSET) = namelen + 1; //city name length
 	memcpy(citysram + cityoffset[citynum] + CITYNAMEOFFSET + 1, convname, namelen); //city name
 #else
@@ -1231,7 +1232,8 @@ int write_new_city(const char* sfname, const uint16_t* citydata, const char* cit
 	memcpy(citysram + cityoffset[citynum] + CITYMAPSTART, citycomp, citysize);
 	memset(citysram + cityoffset[citynum] + CITYMAPSTART + citysize, 0, CITYMAPLEN - citysize);
 
-#ifdef SCE_EXPMODE
+#ifdef NESMODE
+	citysram[cityoffset[0] + CITYNAMEOFFSET + 128] = 1; //1 means city exists
 #else
 	for (int i=0; i < 2; i++)
 		citysram[cityheader[i] + 5 + citynum] = 1; //1 means city exists

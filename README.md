@@ -6,6 +6,8 @@
 
 **snescityeditor**'s primary functionality only depends on one library, which is libpng. It should be easily available in any distribution's repositories. The graphical interface also depends on SDL2 and SDL\_image (2.0.1 or later). It's enabled by default, but can be removed by editing the **Makefile.cfg** file and setting "SDL\_UI" to 0.
 
+To pick whether the SNES or NES game should be used, set the "NESMODE" variable inside the **Makefile.cfg** file to 0 or 1 respectively.
+
 The program compiles into a single executable file that doesn't require installation. Users that want to do so are welcome to copy the resulting file into /usr/local/bin or an equivalent directory manually.
 
 (Even if the program is compiled with the graphical interface, the command line parameters will still work.)
@@ -54,7 +56,7 @@ Optional switches are as follows:
 
 * **-2** will make the program operate on the second city in the SRAM file. This switch is unnecessary when using -f, as it updates all checksums. This switch doesn't work with the -c command due to being unnecessary.
 
-* **-n** allows to specify a city name (max. 8 characters) that will be used when creating a new SRAM file. If not specified, the city name will be based on the PNG map file name.
+* **-n** allows to specify a city name (max. 8 (SNES) or 10(NES) characters) that will be used when creating a new SRAM file. If not specified, the city name will be based on the PNG map file name.
 
 * **-x** will tell the game that the map needs to be "improved" before being imported into the game. This involves redrawing the roads, bridges, the coastline and the forests to make sure they look smooth. Given that, most of the time, the map is drawn with solid colors, this is practically necessary to achieve a good-looking map.
 
@@ -70,12 +72,16 @@ Optional switches are as follows:
 
 # Bugs
 
-The program only performs a simplified compression routine on maps when importing them into the game. This means that a complex map, including lots of buildings or complex river/forest patterns, might be impossible to import back.
+**SNES**: The program only performs a simplified compression routine on maps when importing them into the game. This means that a complex map, including lots of buildings or complex river/forest patterns, might be impossible to import back.
 
 The program doesn't report every single error when importing a map. If the map is malformed, it might result in a glitched city in the game.
 
 It only modifies the city map and none of the other variables, so it might cause glitches when replacing a city map that already had buildings/citizens/etc. 
 
+# Acknowledgments
+
+**NES**: Information on how the data in the SRAM file is located is, in part, based on [Cah4e3](http://cah4e3.shedevr.org.ru/)'s disassembly of the game.
+
 # Disclaimer
 
-The program probably won't cause your computer to melt, but there's no definitive evidence it can't. Use it at your own risk.
+The program shouldn't cause your computer to melt, but there's no definitive evidence it can't. Use it at your own risk.
