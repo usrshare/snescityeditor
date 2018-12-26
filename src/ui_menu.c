@@ -13,8 +13,8 @@
 char city_fname[PATH_MAX], map_fname[PATH_MAX];
 
 char newfile[PATH_MAX];
-char cityname[CITYMAXLEN];
-char cityrename[CITYMAXLEN];
+char cityname[CITYMAXLEN+1];
+char cityrename[CITYMAXLEN+1];
 
 int citynum = 0;
 
@@ -244,6 +244,8 @@ uint16_t citysprite(uint16_t tile) {
 	case 0x3a: return 0xab;
 	case 0x3b: return 0xbc;
 	case 0x3c: return 0xbb;
+	case 0x3d: return 0x147; //road H + power V
+	case 0x3e: return 0x148; //road V + power H
 	
 	case 0x60: return 0xfb; //pwr bridge H
 	case 0x61: return 0xfc; //pwr bridge V
@@ -258,6 +260,8 @@ uint16_t citysprite(uint16_t tile) {
 	case 0x6a: return 0xf3;
 	case 0x6b: return 0xf4;
 	case 0x6c: return 0xf5;
+	case 0x6d: return 0x157; //rail H + power V
+	case 0x6e: return 0x158; //rail V + power H
 
 	case 0x70: return 0xf9; //rail bridge H
 	case 0x71: return 0xfa; //rail bridge V
@@ -676,13 +680,13 @@ void ui_updatefunc(void) {
 			    if (tilepalette) {
 
 				uint16_t tilelist[] = {
-				    // 1    2    3    4    5    6    7    8    9   10   11   12   13   14   15   16   17
-				    0x00,0x04,0x05,0x06,0x14,0x15,0x16,0x32,0x35,0x3a,0x36,0x30,0x72,0x75,0x7a,0x76,0x7d,
-				    0x02,0x07,0x01,0x08,0x17,0x18,0x19,0x33,0x3b,0x3c,0x39,0x31,0x73,0x7b,0x7c,0x79,0x7e,
-				    0x03,0x09,0x0a,0x0b,0x1a,0x1b,0x1c,0x00,0x34,0x38,0x37,0x00,0x70,0x74,0x78,0x77,0x71,
+				    // 1    2    3    4    5    6    7|   8    9   10   11   12|  13   14   15   16   17|  18   19   20   21   22
+				    0x00,0x04,0x05,0x06,0x14,0x15,0x16,0x3d,0x35,0x3a,0x36,0x32,0x7d,0x75,0x7a,0x76,0x72,0x6d,0x65,0x6a,0x66,0x62,
+				    0x02,0x07,0x01,0x08,0x17,0x18,0x19,0x3e,0x3b,0x3c,0x39,0x33,0x7e,0x7b,0x7c,0x79,0x73,0x6e,0x6b,0x6c,0x69,0x63,
+				    0x03,0x09,0x0a,0x0b,0x1a,0x1b,0x1c,0x30,0x34,0x38,0x37,0x31,0x70,0x74,0x78,0x77,0x71,0x60,0x64,0x68,0x67,0x61,
 				};
 
-#define PWIDTH 17
+#define PWIDTH 22
 
 				for (int i = 0; i < (sizeof(tilelist) / sizeof(tilelist[0])); i++)
 				    spr(citysprite(tilelist[i]), 8*(i%PWIDTH)+24, 4 + (i/PWIDTH)*8, 1, 1);
@@ -908,16 +912,18 @@ void ui_updatefunc(void) {
 
 			    s_addstr_c("Enter name of the city.",72,1);
 
-			    box(320,88,88,10,2,1);
-
-			    s_addstr(cityrename,96,88,0);
-			    if (framecnt & 16) spr(339, 96 + (8*strlen(cityrename)),96,1,1);
-
 #ifdef NESMODE
+#define NAMEBOX_X 80
 			    const char* citychars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ,.-: ";
 #else
+#define NAMEBOX_X 88
 			    const char* citychars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ,.- ";
 #endif
+
+			    box(320,NAMEBOX_X,88,CITYMAXLEN + 2,2,1);
+
+			    s_addstr(cityrename,NAMEBOX_X + 8,88,0);
+			    if (framecnt & 16) spr(339, 8 + NAMEBOX_X + (8*strlen(cityrename)),96,1,1);
 
 			    uint8_t k = 0;
 
@@ -932,7 +938,8 @@ void ui_updatefunc(void) {
 			    if (button(58,"8",144,112,2)) k = '8';
 			    if (button(58,"9",160,112,2)) k = '9';
 			    if (button(58,"0",176,112,2)) k = '0';
-			    if (button(266,"CLEAR",192,112,6)) k = '\177';
+			    if (button(58,"-",192,112,2)) k = '-';
+			    if (button(266,"CLR",208,112,4)) k = '\177';
 
 			    box(266,16,128,3,2,1);
 			    if (button(58,"Q",40,128,2)) k = 'Q';
@@ -957,24 +964,23 @@ void ui_updatefunc(void) {
 			    if (button(58,"J",144,144,2)) k = 'J';
 			    if (button(58,"K",160,144,2)) k = 'K';
 			    if (button(58,"L",176,144,2)) k = 'L';
-			    if (button(58,"-",192,144,2)) k = '-';
+#ifdef NESMODE
+			    if (button(58,":",192,144,2)) k = ':';
+#else
+			    box(266,192,144,2,2,1);
+#endif
 			    if (button(266,"OK",208,144,4)) k = 13;
 
-			    box(266,16,160,3,2,1);
-			    if (button(58,"Z",40,160,2)) k = 'Z';
-			    if (button(58,"X",56,160,2)) k = 'X';
-			    if (button(58,"C",72,160,2)) k = 'C';
-			    if (button(58,"V",88,160,2)) k = 'V';
-			    if (button(58,"B",104,160,2)) k = 'B';
-			    if (button(58,"N",120,160,2)) k = 'N';
-			    if (button(58,"M",136,160,2)) k = 'M';
-			    if (button(58,",",152,160,2)) k = ',';
-			    if (button(58,".",168,160,2)) k = '.';
-#ifdef NESMODE
-			    if (button(58,":",184,160,2)) k = ':';
-#else
-			    box(266,184,160,2,2,1);
-#endif
+			    box(266,16,160,5,2,1);
+			    if (button(58,"Z",56 ,160,2)) k = 'Z';
+			    if (button(58,"X",72 ,160,2)) k = 'X';
+			    if (button(58,"C",88 ,160,2)) k = 'C';
+			    if (button(58,"V",104,160,2)) k = 'V';
+			    if (button(58,"B",120,160,2)) k = 'B';
+			    if (button(58,"N",136,160,2)) k = 'N';
+			    if (button(58,"M",152,160,2)) k = 'M';
+			    if (button(58,",",168,160,2)) k = ',';
+			    if (button(58,".",184,160,2)) k = '.';
 			    if (button(266,"Back",200,160,5)) k = '\033';
 
 			    box(266,16,176,4,2,1);
@@ -982,12 +988,13 @@ void ui_updatefunc(void) {
 			    box(266,208,176,4,2,1);
 
 			    if (k == 0) k = toupper(read_kbd());
+			    if (k == ';') k = ':'; //nes specific
 
 			    if ((k == '\b') && (strlen(cityrename) != 0)) cityrename[strlen(cityrename)-1] = 0;
-			    if ((k >= 32) && (strlen(cityrename) < 8) && (strchr(citychars,k)) ) { cityrename[strlen(cityrename)+1] = 0; cityrename[strlen(cityrename)] = k; }
+			    if ((k >= 32) && (strlen(cityrename) < CITYMAXLEN) && (strchr(citychars,k)) ) { cityrename[strlen(cityrename)+1] = 0; cityrename[strlen(cityrename)] = k; }
 			    if (k == 13) { open_kbd(0); city_modified = 1; strcpy(cityname,cityrename); sdl_ui_mode = UI_OPTIONS; }
 			    if (k == '\033') { open_kbd(0); sdl_ui_mode = UI_OPTIONS; }
-			    if (k == '\177') memset(cityrename,0,9);
+			    if (k == '\177') memset(cityrename,0,CITYMAXLEN+1);
 
 			    break; }
 	case UI_SAVING: {
