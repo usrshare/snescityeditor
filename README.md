@@ -42,7 +42,7 @@ these colors are used to refer to different varieties of tiles.
 These maps can either be created in a graphics editor (good for converting
 real-world maps) or in the program's graphical interface.
 
-## Graphical interfacke
+## Graphical interface
 
 By default, the program opens with a menu providing different operations. This
 menu is still a work in progress, and there might be bugs, but it should work
