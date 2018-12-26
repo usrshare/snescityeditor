@@ -49,11 +49,7 @@ uint8_t nes_savevalues[256];
 #define NUMBER_OF_CITIES 2
 const size_t cityheader[2] = {0, 0x7FF0};
 const size_t cityoffset[2] = {0x10, 0x4000};
-
-const mapvalues[] = {};
 #endif
-
-#define MAPVALUES_C ( sizeof(mapvalues) / sizeof(mapvalues[0]) )
 
 const char* months[] = {"???","JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"};
 

@@ -249,7 +249,13 @@ int sdl_ui_main(cb_noparam mainfunc, cb_noparam updatefunc) {
 
 	atexit(SDL_Quit);
 
-	mainwin = SDL_CreateWindow("snescityeditor",SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,win_w,win_h,SDL_WINDOW_RESIZABLE);
+#ifdef NESMODE
+#define WINDOWTITLE "nescityeditor"
+#else
+#define WINDOWTITLE "snescityeditor"
+#endif
+
+	mainwin = SDL_CreateWindow(WINDOWTITLE,SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,win_w,win_h,SDL_WINDOW_RESIZABLE);
 
 	if (!mainwin) {
 		fprintf(stderr,"Unable to create window: %s\n",SDL_GetError()); exit(1); }

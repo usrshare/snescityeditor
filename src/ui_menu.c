@@ -110,7 +110,7 @@ void ui_initfunc(void) {
 
     for (int iy=0; iy < 14; iy++) for (int ix=0; ix<16; ix++) spr(4,ix*16,iy*16,2,2);
 
-#ifdef NESMODE
+#if NESMODE
     s_addstr_c("NESCITYEDITOR",32,0);
 #else
     s_addstr_c("SNESCITYEDITOR",32,0);
@@ -1000,13 +1000,20 @@ void ui_updatefunc(void) {
 	case UI_SAVING: {
 			    msgbox("Now saving...",65535);
 
+#ifdef NESMODE
+#define DEFAULTNAME "NESCITY"
+#else
+#define DEFAULTNAME "SNESCITY"
+#endif
 			    int r = 0;
 			    switch (sdl_ui_operation) {
 				case OP_CREATENEW:
-				    if (strlen(cityname) == 0) strcpy(cityname,"SNESCITY");
+				    if (strlen(cityname) == 0) strcpy(cityname,DEFAULTNAME);
 				    strcpy(newfile,cityname);
 #ifdef NESMODE
 				    strcat(newfile,".sav");
+				    for (int i=0; i < strlen(newfile); i++)
+					if (newfile[i] == ':') newfile[i] = '_'; //fix for windows
 #else
 				    strcat(newfile,".srm");
 #endif
@@ -1015,7 +1022,7 @@ void ui_updatefunc(void) {
 				case OP_MAP_TO_SRAM: r = replace_city(city_fname,citytiles,citynum);
 						     break;
 				case OP_MAP_TO_PNG: 
-						     if (strlen(cityname) == 0) strcpy(cityname,"SNESCITY");
+						     if (strlen(cityname) == 0) strcpy(cityname,DEFAULTNAME);
 						     strcpy(newfile,cityname);
 						     strcat(newfile,".png");
 						     r = write_png_map (newfile, citytiles);
