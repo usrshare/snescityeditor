@@ -5,6 +5,17 @@ and Super NES versions of SimCity by modifying SRAM save files.
 
 # Compilation/Installation
 
+## Binaries for Windows users
+
+For Windows users, statically-compiled binaries for both the NES and SNES
+editors and available in the "releases" section. The ZIP file labeled
+**snescityeditor-win32.zip** should include both **nescityeditor.exe** and
+**snescityeditor.exe**.
+
+[**Download for Windows**](https://github.com/usrshare/snescityeditor/releases)
+
+## Compiling from source
+
 **snescityeditor**'s primary functionality only depends on one library, which is
 libpng. It should be easily available in any distribution's repositories. The
 graphical interface also depends on SDL2 and SDL\_image (2.0.1 or later). It's
