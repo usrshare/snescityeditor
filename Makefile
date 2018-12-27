@@ -36,11 +36,13 @@ ifdef SDL_UI
 _OBJS += sdl_ui.o ui_menu.o
 DEFS += -DUSE_SDL_UI
 CFLAGS += $(shell sdl2-config --cflags)
+
 ifdef STATIC
-LDFLAGS += $(shell sdl2-config --libs) -lSDL2_image
-else
-endif
 LDFLAGS += $(shell sdl2-config --static-libs) -lSDL2_image
+else
+LDFLAGS += $(shell sdl2-config --libs) -lSDL2_image
+endif
+
 endif
 
 CC = $(PREFIX)$(_CC)
