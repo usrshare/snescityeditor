@@ -2,6 +2,7 @@
 #include "textures.xpm"
 #include <SDL.h>
 #include <SDL_image.h>
+#include <unistd.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <limits.h>
@@ -13,22 +14,21 @@ SDL_Renderer* ren = 0; //renderer
 SDL_Surface* tsurf = 0; //texture surface (128x256)
 SDL_Surface* scs = 0; //screen surface (256x224)
 
-#ifdef PRESCALE
-SDL_Texture* pre_tex = 0;
 #define SCREENW 256
 #define SCREENH 224
+
+#ifdef PRESCALE
+SDL_Texture* pre_tex = 0;
 #define OUTPUTW 512
 #define OUTPUTH 448
 #else
-#define SCREENW 256
-#define SCREENH 224
 #define OUTPUTW 256
 #define OUTPUTH 224
 #endif
 
 SDL_Texture* tex = 0; //screen texture (OUTPUTWxOUTPUTH)
 
-uint32_t ticks = 0;
+uint32_t start_ticks = 0;
 uint32_t framecnt = 0;
 
 int win_w = 640;
@@ -238,6 +238,128 @@ int sdl_ui_menu(int choice_c, char** choice_v) {
 	if ((m.b_release) && (menu_foc >= 0)) return menu_foc; else return -1;
 }
 
+struct sdl_frame_cb_ctx {
+	cb_noparam updatefunc;
+};
+	
+int rerender = 0;
+
+uint32_t sdl_frame_cb(uint32_t interval, void* param) {
+
+	struct sdl_frame_cb_ctx* ctx = param;
+
+
+	SDL_Event lastevent;
+
+	while (SDL_PollEvent(&lastevent) != 0) {
+
+		switch(lastevent.type) {
+			case SDL_MOUSEMOTION:
+				mousecoords.x = (lastevent.motion.x - viewport.x) * 256 / viewport.w;
+				mousecoords.y = (lastevent.motion.y - viewport.y) * 224 / viewport.h;
+
+				mousecoords.valid = 1;
+				if ((mousecoords.x < 0) || mousecoords.y >= 256) mousecoords.valid = 0;
+				if ((mousecoords.y < 0) || mousecoords.y >= 224) mousecoords.valid = 0;
+				break;
+			case SDL_MOUSEBUTTONDOWN:
+			case SDL_MOUSEBUTTONUP:
+
+				if (lastevent.button.state == SDL_PRESSED) {
+					mousecoords.buttons |= SDL_BUTTON(lastevent.button.button);
+					mousecoords.b_press |= SDL_BUTTON(lastevent.button.button); 
+					mousecoords.press_x = mousecoords.x;
+					mousecoords.press_y = mousecoords.y;
+				}
+				else {
+					mousecoords.buttons &= ~ SDL_BUTTON(lastevent.button.button);
+					mousecoords.b_release |= SDL_BUTTON(lastevent.button.button); 
+					mousecoords.release_x = mousecoords.x;
+					mousecoords.release_y = mousecoords.y;
+				}
+				break;
+			case SDL_KEYDOWN:
+			case SDL_KEYUP: {
+						if ((kbd_open) && (lastevent.key.keysym.sym <= 127)) {
+
+							char kcode = lastevent.key.keysym.sym;
+
+							if (lastevent.key.state == SDL_PRESSED) {
+								//SDL_PRESSED
+
+								if (strchr(keys_held,kcode) == NULL) {
+									if ( (strlen(keys_held) < 15) && (strlen(keyboard_buffer) < 15) ) {
+										keys_held[strlen(keys_held)] = kcode;
+										keyboard_buffer[strlen(keyboard_buffer)] = kcode;
+										printf("Got key %d\n", kcode); }
+									else printf("Keyboard buffer full.\n");
+								}
+							} else {
+								//SDL_RELEASED
+								strdel(keys_held,kcode);
+							}
+						}
+						break; }
+			case SDL_WINDOWEVENT:
+					if (lastevent.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {rerender = 1; break; }
+					if (lastevent.window.event != SDL_WINDOWEVENT_SIZE_CHANGED) break;
+
+					SDL_GetWindowSize(mainwin,&win_w,&win_h);
+					SDL_Rect newsize = boxify();
+					SDL_RenderSetViewport(ren, &newsize);
+					rerender = 1;
+					break;
+			case SDL_DROPFILE:
+
+					strncpy(dropfilename,lastevent.drop.file,PATH_MAX);
+					got_drop = 1;
+					free(lastevent.drop.file);
+					break;
+			case SDL_QUIT:
+
+					exit(0);
+		}
+
+	}
+
+	// this elaborate mechanism tries to call sdl_ui_update and rerender
+	// everything at least 60 times per second.
+
+	uint32_t cticks = SDL_GetTicks();
+
+	uint32_t frameticks = start_ticks + (framecnt * 1000 / 60); //when should we do this frame?
+
+	while (frameticks <= cticks) { //it's about time
+
+		cticks = SDL_GetTicks();
+		ctx->updatefunc();
+		rerender = 1;
+		//printf("frame %u performed at %u\n", framecnt, cticks);
+		framecnt++;
+		frameticks = start_ticks + (framecnt * 1000 / 60); //figure out the next frame instead
+	}
+	
+	if (rerender) {
+
+#ifdef PRESCALE
+		SDL_UpdateTexture(pre_tex, NULL, scs->pixels, scs->pitch);
+
+		SDL_SetRenderTarget(ren, tex);
+		SDL_RenderCopy(ren, pre_tex, NULL, NULL);
+		SDL_SetRenderTarget(ren, NULL);
+#else
+		SDL_UpdateTexture(tex, NULL, scs->pixels, scs->pitch);
+#endif
+		SDL_RenderClear(ren);
+		SDL_RenderCopy(ren, tex, NULL, NULL);
+		SDL_RenderPresent(ren);
+
+		rerender = 0;
+	}
+	
+	return (frameticks - cticks);
+}
+
 int sdl_ui_main(cb_noparam mainfunc, cb_noparam updatefunc) {
 
 	memset(keyboard_buffer,0,sizeof keyboard_buffer);
@@ -278,21 +400,21 @@ int sdl_ui_main(cb_noparam mainfunc, cb_noparam updatefunc) {
 	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY,"0");
 
 	pre_tex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, SCREENW, SCREENH);
-	
+
 	if (!pre_tex) {
 		fprintf(stderr,"Unable to create texture: %s\n",SDL_GetError()); exit(1); }
-	
+
 	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY,"2");
-	
+
 	tex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET,OUTPUTW,OUTPUTH);
 #else
-	
+
 	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY,"2");
-	
+
 	tex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,OUTPUTW,OUTPUTH);
 
 #endif
-	
+
 
 	if (!tex) {
 		fprintf(stderr,"Unable to create texture: %s\n",SDL_GetError()); exit(1); }
@@ -301,122 +423,14 @@ int sdl_ui_main(cb_noparam mainfunc, cb_noparam updatefunc) {
 
 	mainfunc();
 
-	int quit = 0;
+	start_ticks = SDL_GetTicks();
+	framecnt = 0;
 
-	int rerender = 0;
+	struct sdl_frame_cb_ctx ctx = {.updatefunc = updatefunc};
 
-	while (!quit) {
+	SDL_AddTimer( 1000 / 60, sdl_frame_cb, &ctx); 
 
-		SDL_Event lastevent;
-
-		while (SDL_PollEvent(&lastevent) != 0) {
-
-			switch(lastevent.type) {
-				case SDL_MOUSEMOTION:
-					mousecoords.x = (lastevent.motion.x - viewport.x) * 256 / viewport.w;
-					mousecoords.y = (lastevent.motion.y - viewport.y) * 224 / viewport.h;
-
-					mousecoords.valid = 1;
-					if ((mousecoords.x < 0) || mousecoords.y >= 256) mousecoords.valid = 0;
-					if ((mousecoords.y < 0) || mousecoords.y >= 224) mousecoords.valid = 0;
-					break;
-				case SDL_MOUSEBUTTONDOWN:
-				case SDL_MOUSEBUTTONUP:
-
-					if (lastevent.button.state == SDL_PRESSED) {
-						mousecoords.buttons |= SDL_BUTTON(lastevent.button.button);
-						mousecoords.b_press |= SDL_BUTTON(lastevent.button.button); 
-						mousecoords.press_x = mousecoords.x;
-						mousecoords.press_y = mousecoords.y;
-					}
-					else {
-						mousecoords.buttons &= ~ SDL_BUTTON(lastevent.button.button);
-						mousecoords.b_release |= SDL_BUTTON(lastevent.button.button); 
-						mousecoords.release_x = mousecoords.x;
-						mousecoords.release_y = mousecoords.y;
-					}
-					break;
-				case SDL_KEYDOWN:
-				case SDL_KEYUP: {
-							if ((kbd_open) && (lastevent.key.keysym.sym <= 127)) {
-
-								char kcode = lastevent.key.keysym.sym;
-
-								if (lastevent.key.state == SDL_PRESSED) {
-									//SDL_PRESSED
-
-									if (strchr(keys_held,kcode) == NULL) {
-										if ( (strlen(keys_held) < 15) && (strlen(keyboard_buffer) < 15) ) {
-											keys_held[strlen(keys_held)] = kcode;
-											keyboard_buffer[strlen(keyboard_buffer)] = kcode;
-											printf("Got key %d\n", kcode); }
-										else printf("Keyboard buffer full.\n");
-									}
-								} else {
-									//SDL_RELEASED
-									strdel(keys_held,kcode);
-								}
-							}
-							break; }
-				case SDL_WINDOWEVENT:
-						if (lastevent.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {rerender = 1; break; }
-						if (lastevent.window.event != SDL_WINDOWEVENT_SIZE_CHANGED) break;
-
-						SDL_GetWindowSize(mainwin,&win_w,&win_h);
-						SDL_Rect newsize = boxify();
-						SDL_RenderSetViewport(ren, &newsize);
-						rerender = 1;
-						break;
-				case SDL_DROPFILE:
-
-						strncpy(dropfilename,lastevent.drop.file,PATH_MAX);
-						got_drop = 1;
-						free(lastevent.drop.file);
-						break;
-				case SDL_QUIT:
-						quit = 1;
-			}
-
-		}
-
-		if (rerender) {
-
-#ifdef PRESCALE
-			SDL_UpdateTexture(pre_tex, NULL, scs->pixels, scs->pitch);
-
-			SDL_SetRenderTarget(ren, tex);
-			SDL_RenderCopy(ren, pre_tex, NULL, NULL);
-			SDL_SetRenderTarget(ren, NULL);
-#else
-			SDL_UpdateTexture(tex, NULL, scs->pixels, scs->pitch);
-#endif
-			SDL_RenderClear(ren);
-			SDL_RenderCopy(ren, tex, NULL, NULL);
-			SDL_RenderPresent(ren);
-
-			rerender = 0;
-		}
-
-		// this elaborate mechanism tries to call sdl_ui_update and rerender
-		// everything at least 60 times per second.
-		uint32_t cticks = SDL_GetTicks();
-		uint32_t nframecnt = (cticks * 60)/1000 ;
-		if (nframecnt == framecnt) {
-
-			uint32_t nxtticks = ((framecnt+1) * 1000) / 60;
-			SDL_Delay(nxtticks - cticks);
-		} else {
-			while (nframecnt > framecnt) {
-
-				updatefunc();
-				framecnt = nframecnt;
-
-				mousecoords.b_press = 0; mousecoords.b_release = 0;
-			}
-			rerender = 1;
-		}
-
-	}
+	pause();
 
 	SDL_DestroyRenderer(ren);
 	SDL_DestroyWindow(mainwin);
