@@ -14,7 +14,7 @@ SDL_Surface* tsurf = 0; //texture surface (128x256)
 SDL_Surface* scs = 0; //screen surface (256x224)
 
 #ifdef PRESCALE
-SDL_Surface* scs2 = 0; //scaled screen surface (512x448)
+SDL_Texture* pre_tex = 0;
 #define SCREENW 256
 #define SCREENH 224
 #define OUTPUTW 512
@@ -274,13 +274,25 @@ int sdl_ui_main(cb_noparam mainfunc, cb_noparam updatefunc) {
 		fprintf(stderr,"Unable to create surface: %s\n",SDL_GetError()); exit(1); }
 
 #ifdef PRESCALE
-	scs2 = SDL_CreateRGBSurface(0,512,448,32,0x00FF0000,0x0000FF00,0x000000FF,0xFF000000);
 
-	if (!scs2) {
-		fprintf(stderr,"Unable to create scaled surface: %s\n",SDL_GetError()); exit(1); }
-#endif
+	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY,"0");
+
+	pre_tex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, SCREENW, SCREENH);
+	
+	if (!pre_tex) {
+		fprintf(stderr,"Unable to create texture: %s\n",SDL_GetError()); exit(1); }
+	
+	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY,"2");
+	
+	tex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET,OUTPUTW,OUTPUTH);
+#else
+	
+	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY,"2");
 	
 	tex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,OUTPUTW,OUTPUTH);
+
+#endif
+	
 
 	if (!tex) {
 		fprintf(stderr,"Unable to create texture: %s\n",SDL_GetError()); exit(1); }
@@ -370,8 +382,11 @@ int sdl_ui_main(cb_noparam mainfunc, cb_noparam updatefunc) {
 		if (rerender) {
 
 #ifdef PRESCALE
-			SDL_BlitScaled(scs,NULL,scs2,NULL);
-			SDL_UpdateTexture(tex, NULL, scs2->pixels, scs2->pitch);
+			SDL_UpdateTexture(pre_tex, NULL, scs->pixels, scs->pitch);
+
+			SDL_SetRenderTarget(ren, tex);
+			SDL_RenderCopy(ren, pre_tex, NULL, NULL);
+			SDL_SetRenderTarget(ren, NULL);
 #else
 			SDL_UpdateTexture(tex, NULL, scs->pixels, scs->pitch);
 #endif

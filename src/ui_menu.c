@@ -68,6 +68,66 @@ void fillspr(uint16_t s, uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
 	    spr(s,x+(ix*8),y+(iy*8),1,1);
 }
 
+#define HIGHLIGHT_COLOR 0xdeeed6
+#define SHADE_COLOR 0x757161
+
+#define BLUE_BOX_C 0x6dc2ca
+#define RED_BOX_C 0xd2aa99
+#define GRAY_BOX_C 0x8595a1
+
+void color_box(uint32_t color, uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
+  
+    //displays a button-like box
+
+   fillrect(color, x, y, w, h);
+   
+   fillrect(HIGHLIGHT_COLOR, x+1, y+1, w-3, 1);
+   fillrect(HIGHLIGHT_COLOR, x+1, y+1, 1, h-3);
+   fillrect(SHADE_COLOR, x+1, y+h-2, w-1, 2);
+   fillrect(SHADE_COLOR, x+w-2, y+1, 2, h-1);
+   pset(SHADE_COLOR, x, y+h-1);
+   pset(SHADE_COLOR, x+w-1, y);
+} 
+
+void thin_color_box(uint32_t color, uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
+  
+   //displays a thinner window box
+
+   fillrect(color, x, y, w, h);
+   
+   fillrect(HIGHLIGHT_COLOR, x, y, w-1, 1);
+   fillrect(HIGHLIGHT_COLOR, x+1, y+1, 1, h-2);
+   
+   fillrect(SHADE_COLOR, x, y+h-1, w, 1);
+   
+   pset(SHADE_COLOR, x+w-1, y);
+   fillrect(SHADE_COLOR, x+w-2, y+1, 2, h-1);
+} 
+
+void thinnest_color_box(uint32_t color, uint8_t x, uint8_t y, uint8_t w, uint8_t h, bool down) {
+
+    fillrect(color, x+1,y+1,w-2,h-2);
+   
+    fillrect(down ? SHADE_COLOR : HIGHLIGHT_COLOR, x, y, w, 1);
+    fillrect(down ? SHADE_COLOR : HIGHLIGHT_COLOR, x, y, 1, h);
+    
+    fillrect(down ? HIGHLIGHT_COLOR : SHADE_COLOR, x+1, y+h-1, w-1, 1);
+    fillrect(down ? HIGHLIGHT_COLOR : SHADE_COLOR, x+w-1, y+1, 1, h-1);
+
+}
+
+void color_box_down(uint32_t color, uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
+
+   fillrect(SHADE_COLOR, x, y, w, 2);
+   fillrect(SHADE_COLOR, x, y, 2, h);
+
+   fillrect(HIGHLIGHT_COLOR, x+2, y+h-2, w-3, 1);
+   fillrect(HIGHLIGHT_COLOR, x+w-2, y+2, 1, h-3);
+   
+   fillrect(color, x+1, y+h-1, w-1, 1);
+   fillrect(color, x+w-1, y+1, 1, h-1);
+}
+
 void box(uint16_t s, uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t sz) {
 
     spr(s,x,y,sz,sz);
@@ -155,22 +215,28 @@ int sdl_back_mode = 0;
 
 int import_mode = 0;
 
-int sprbutton(uint16_t bspr, uint16_t pspr, uint8_t x, uint8_t y, uint8_t bw, uint8_t bh, uint8_t sw, uint8_t sh) {
 
-    box(bspr,x,y,bw,bh,1);
+int sprbutton(uint32_t color, uint16_t pspr, uint8_t x, uint8_t y, uint8_t bw, uint8_t bh, uint8_t sw, uint8_t sh) {
+
+    //draw a bw*8 x bh*8 button with a sw*8 x sw*8 sprite in the middle of it.
+
+    color_box(color,x,y,bw*8,bh*8);
     spr(pspr,x + (bw-sw)*4, y + (bh-sh)*4,sw,sh); 
 
-    if (hold(x,y,bw*8,bh*8,1)) box( (bspr == 266 ? 269 : 61),x,y,bw,bh,1);
+    if (hold(x,y,bw*8,bh*8,1)) color_box_down(color,x,y,bw*8,bh*8);
 
     if (click(x,y,bw*8,bh*8,1)) return 1; else return 0;
 }
 
-int button(uint16_t spr, const char* text, uint8_t x, uint8_t y, uint8_t w) {
 
-    box(spr,x,y,w,2,1);
+int button(uint32_t color, const char* text, uint8_t x, uint8_t y, uint8_t w) {
+
+    //draw a bw*8 x 16 button with a text label.
+
+    color_box(color,x,y,w*8,2*8);
     s_addstr_cx(text,x + (4*w),y+4,1);
 
-    if (hold(x,y,w*8,16,1)) box( (spr == 266 ? 269 : 61),x,y,w,2,1);
+    if (hold(x,y,w*8,16,1)) color_box_down(color, x,y,w*8,2*8);
 
     if (click(x,y,w*8,16,1)) return 1; else return 0;
 }
@@ -317,6 +383,7 @@ bool tile_waterbridge(uint8_t x, uint8_t y) {
     uint16_t tile = citytiles[y * CITYWIDTH + x];
     if ((tile >= 1) && (tile <= 3)) return true;
     if ((tile >= 0x30) && (tile <= 0x31)) return true;
+    if ((tile >= 0x60) && (tile <= 0x61)) return true;
     if ((tile >= 0x70) && (tile <= 0x71)) return true; 
     return false;
 }
@@ -568,15 +635,23 @@ void ui_updatefunc(void) {
 	case UI_DROPSRAM: {
 			      // drop city file here
 
-			      box(13,8,64,30,18,1);
+			      thin_color_box(RED_BOX_C,8,64,30*8,18*8);
 
 			      s_addstr_c("Drag your SRAM file",80,1);
 			      s_addstr_c("into this window.",96,1);
+			     
+#ifdef NESMODE
+			      spr(0xd7, 104, 120, 2, 2); //NES SAV icon
+#else
+			      spr(0xd5, 104, 120, 2, 2); //SNES SRM icon
+#endif
+			      spr(0x122, 120, 120, 2, 2); //arrow icon
+			      spr(0xd9, 136, 120, 2, 2); //window icon
 
 			      if (getdrop(city_fname,PATH_MAX))
 				  sdl_ui_mode = UI_SELCITY;
 
-			      if (button(58,"BACK",176,184,7)) sdl_ui_mode = UI_MAINMENU;
+			      if (button(BLUE_BOX_C,"BACK",176,184,7)) sdl_ui_mode = UI_MAINMENU;
 
 			      break; }
 	case UI_SELCITY: {
@@ -621,11 +696,15 @@ void ui_updatefunc(void) {
 			     break; }
 	case UI_DROPPNG: {
 
-			     box(13,8,64,30,18,1);
+			     thin_color_box(RED_BOX_C,8,64,30*8,18*8);
 			     // drop png file here
 
 			     s_addstr_c("Drag your PNG map file",80,1);
 			     s_addstr_c("into this window.",96,1);
+
+			     spr(0xd3, 104, 120, 2, 2); //PNG icon
+			     spr(0x122, 120, 120, 2, 2); //arrow icon
+			     spr(0xd9, 136, 120, 2, 2); //window icon
 
 			     if (getdrop(map_fname,PATH_MAX)) {
 				 int r = read_png_map(map_fname,citytiles);
@@ -639,7 +718,7 @@ void ui_updatefunc(void) {
 				 }
 			     }
 
-			     if (button(58,"BACK",176,184,7)) sdl_ui_mode = UI_MAINMENU;
+			     if (button(BLUE_BOX_C,"BACK",176,184,7)) sdl_ui_mode = UI_MAINMENU;
 
 			     break; }
 	case UI_EDITOR: {
@@ -804,10 +883,20 @@ void ui_updatefunc(void) {
 
 				uint8_t xshift = ((mousecoords.x >= 200) && (mousecoords.y < 72)) ? 0 : 200;
 
-				box(266, xshift + 8,24,5,5,1);
-				spr(314, xshift + 12,34,4,4);
-				s_addstr(cityname, xshift + 12,26,2);
+				//show the minimap
+
+#ifdef NESMODE
+				color_box(GRAY_BOX_C, xshift+8, 24, 40, 46);
+				thinnest_color_box(RED_BOX_C, xshift+12, 34, 32, 32, true);
+
+				spr(318, xshift + 10 + ((edit_scrollx+16) / 16), 32 + (edit_scrolly / 16), 2, 2);
+#else
+				color_box(GRAY_BOX_C, xshift+8, 24, 40, 40);
+				thinnest_color_box(RED_BOX_C, xshift+12, 34, 32, 26, true);
 				spr(318, xshift + 10 + ((edit_scrollx+16) / 32), 32 + (edit_scrolly / 32), 2, 2);
+#endif
+
+				s_addstr(cityname, xshift + 12,26,2);
 
 			    } else {
 				scrdiff_x = 0; scrdiff_y = 0;
@@ -845,7 +934,7 @@ void ui_updatefunc(void) {
 				 transform_city = 0;
 			     }
 
-			     box(13,8,64,30,18,1);
+			     thin_color_box(RED_BOX_C,8,64,30*8,18*8);
 			     box(10,32,80,17,15,1);
 
 			     strcpy(newfile,map_fname);
@@ -879,36 +968,36 @@ void ui_updatefunc(void) {
 				 "NONE","SIMPLE","COAST1","COAST2","EXTRA"
 			     };
 
-			     if (button(58,import_desc[import_mode],176,88,7)) {
+			     if (button(BLUE_BOX_C,import_desc[import_mode],176,88,7)) {
 				 import_mode += 1;
 				 if (import_mode >= I_COUNT) import_mode = 0;
 				 transform_city = 1;
 			     }
 
-			     if (button(58,"Rename",176,112,7)) {
+			     if (button(BLUE_BOX_C,"Rename",176,112,7)) {
 				 memset(cityrename,0,9);
 				 strcpy(cityrename,cityname);
 				 sdl_ui_mode = UI_RENAME;
 			     }
 
-			     if (button(58,"Edit",176,132,7)) {
+			     if (button(BLUE_BOX_C,"Edit",176,132,7)) {
 				 memcpy(citytiles,citytiles_trans,sizeof citytiles);
 				 if (import_mode != I_NOIMPROVE) city_modified = 1;
 				 sdl_ui_mode = UI_EDITOR;
 			     }
 
-			     if (button(58,"Save",176,152,7)) {
+			     if (button(BLUE_BOX_C,"Save",176,152,7)) {
 				 memcpy(citytiles,citytiles_trans,sizeof citytiles);
 				 if (import_mode != I_NOIMPROVE) city_modified = 1;
 				 sdl_ui_mode = UI_SAVEMENU;
 			     }
 
-			     if (button(58,"Back",176,180,7)) sdl_ui_mode = sdl_back_mode;
+			     if (button(BLUE_BOX_C,"Back",176,180,7)) sdl_ui_mode = sdl_back_mode;
 
 			     break; }
 	case UI_RENAME: {
 			    open_kbd(1);
-			    box(266,8,64,30,18,1);
+			    color_box(GRAY_BOX_C,8,64,30*8,18*8);
 
 			    s_addstr_c("Enter name of the city.",72,1);
 
@@ -927,65 +1016,65 @@ void ui_updatefunc(void) {
 
 			    uint8_t k = 0;
 
-			    box(266,16,112,2,2,1);
-			    if (button(58,"1",32,112,2)) k = '1';
-			    if (button(58,"2",48,112,2)) k = '2';
-			    if (button(58,"3",64,112,2)) k = '3';
-			    if (button(58,"4",80,112,2)) k = '4';
-			    if (button(58,"5",96,112,2)) k = '5';
-			    if (button(58,"6",112,112,2)) k = '6';
-			    if (button(58,"7",128,112,2)) k = '7';
-			    if (button(58,"8",144,112,2)) k = '8';
-			    if (button(58,"9",160,112,2)) k = '9';
-			    if (button(58,"0",176,112,2)) k = '0';
-			    if (button(58,"-",192,112,2)) k = '-';
-			    if (button(266,"CLR",208,112,4)) k = '\177';
+			    color_box(GRAY_BOX_C,16,112,2*8,2*8);
+			    if (button(BLUE_BOX_C,"1",32,112,2)) k = '1';
+			    if (button(BLUE_BOX_C,"2",48,112,2)) k = '2';
+			    if (button(BLUE_BOX_C,"3",64,112,2)) k = '3';
+			    if (button(BLUE_BOX_C,"4",80,112,2)) k = '4';
+			    if (button(BLUE_BOX_C,"5",96,112,2)) k = '5';
+			    if (button(BLUE_BOX_C,"6",112,112,2)) k = '6';
+			    if (button(BLUE_BOX_C,"7",128,112,2)) k = '7';
+			    if (button(BLUE_BOX_C,"8",144,112,2)) k = '8';
+			    if (button(BLUE_BOX_C,"9",160,112,2)) k = '9';
+			    if (button(BLUE_BOX_C,"0",176,112,2)) k = '0';
+			    if (button(BLUE_BOX_C,"-",192,112,2)) k = '-';
+			    if (button(GRAY_BOX_C,"CLR",208,112,4)) k = '\177';
 
-			    box(266,16,128,3,2,1);
-			    if (button(58,"Q",40,128,2)) k = 'Q';
-			    if (button(58,"W",56,128,2)) k = 'W';
-			    if (button(58,"E",72,128,2)) k = 'E';
-			    if (button(58,"R",88,128,2)) k = 'R';
-			    if (button(58,"T",104,128,2)) k = 'T';
-			    if (button(58,"Y",120,128,2)) k = 'Y';
-			    if (button(58,"U",136,128,2)) k = 'U';
-			    if (button(58,"I",152,128,2)) k = 'I';
-			    if (button(58,"O",168,128,2)) k = 'O';
-			    if (button(58,"P",184,128,2)) k = 'P';
-			    if (button(266,"B.S",200,128,5)) k = '\b';
+			    color_box(GRAY_BOX_C,16,128,3*8,2*8);
+			    if (button(BLUE_BOX_C,"Q",40,128,2)) k = 'Q';
+			    if (button(BLUE_BOX_C,"W",56,128,2)) k = 'W';
+			    if (button(BLUE_BOX_C,"E",72,128,2)) k = 'E';
+			    if (button(BLUE_BOX_C,"R",88,128,2)) k = 'R';
+			    if (button(BLUE_BOX_C,"T",104,128,2)) k = 'T';
+			    if (button(BLUE_BOX_C,"Y",120,128,2)) k = 'Y';
+			    if (button(BLUE_BOX_C,"U",136,128,2)) k = 'U';
+			    if (button(BLUE_BOX_C,"I",152,128,2)) k = 'I';
+			    if (button(BLUE_BOX_C,"O",168,128,2)) k = 'O';
+			    if (button(BLUE_BOX_C,"P",184,128,2)) k = 'P';
+			    if (button(GRAY_BOX_C,"B.S",200,128,5)) k = '\b';
 
-			    box(266,16,144,4,2,1);
-			    if (button(58,"A",48,144,2)) k = 'A';
-			    if (button(58,"S",64,144,2)) k = 'S';
-			    if (button(58,"D",80,144,2)) k = 'D';
-			    if (button(58,"F",96,144,2)) k = 'F';
-			    if (button(58,"G",112,144,2)) k = 'G';
-			    if (button(58,"H",128,144,2)) k = 'H';
-			    if (button(58,"J",144,144,2)) k = 'J';
-			    if (button(58,"K",160,144,2)) k = 'K';
-			    if (button(58,"L",176,144,2)) k = 'L';
+			    color_box(GRAY_BOX_C,16,144,4*8,2*8);
+			    if (button(BLUE_BOX_C,"A",48,144,2)) k = 'A';
+			    if (button(BLUE_BOX_C,"S",64,144,2)) k = 'S';
+			    if (button(BLUE_BOX_C,"D",80,144,2)) k = 'D';
+			    if (button(BLUE_BOX_C,"F",96,144,2)) k = 'F';
+			    if (button(BLUE_BOX_C,"G",112,144,2)) k = 'G';
+			    if (button(BLUE_BOX_C,"H",128,144,2)) k = 'H';
+			    if (button(BLUE_BOX_C,"J",144,144,2)) k = 'J';
+			    if (button(BLUE_BOX_C,"K",160,144,2)) k = 'K';
+			    if (button(BLUE_BOX_C,"L",176,144,2)) k = 'L';
 #ifdef NESMODE
-			    if (button(58,":",192,144,2)) k = ':';
+			    if (button(BLUE_BOX_C,":",192,144,2)) k = ':';
 #else
-			    box(266,192,144,2,2,1);
+			    color_box(GRAY_BOX_C,192,144,2*8,2*8);
 #endif
-			    if (button(266,"OK",208,144,4)) k = 13;
+			    if (button(GRAY_BOX_C,"OK",208,144,4)) k = 13;
 
-			    box(266,16,160,5,2,1);
-			    if (button(58,"Z",56 ,160,2)) k = 'Z';
-			    if (button(58,"X",72 ,160,2)) k = 'X';
-			    if (button(58,"C",88 ,160,2)) k = 'C';
-			    if (button(58,"V",104,160,2)) k = 'V';
-			    if (button(58,"B",120,160,2)) k = 'B';
-			    if (button(58,"N",136,160,2)) k = 'N';
-			    if (button(58,"M",152,160,2)) k = 'M';
-			    if (button(58,",",168,160,2)) k = ',';
-			    if (button(58,".",184,160,2)) k = '.';
-			    if (button(266,"Back",200,160,5)) k = '\033';
+			    color_box(GRAY_BOX_C,16,160,5*8,2*8);
+			    if (button(BLUE_BOX_C,"Z",56 ,160,2)) k = 'Z';
+			    if (button(BLUE_BOX_C,"X",72 ,160,2)) k = 'X';
+			    if (button(BLUE_BOX_C,"C",88 ,160,2)) k = 'C';
+			    if (button(BLUE_BOX_C,"V",104,160,2)) k = 'V';
+			    if (button(BLUE_BOX_C,"B",120,160,2)) k = 'B';
+			    if (button(BLUE_BOX_C,"N",136,160,2)) k = 'N';
+			    if (button(BLUE_BOX_C,"M",152,160,2)) k = 'M';
+			    if (button(BLUE_BOX_C,",",168,160,2)) k = ',';
+			    if (button(BLUE_BOX_C,".",184,160,2)) k = '.';
+			    if (button(GRAY_BOX_C,"Back",200,160,5)) k = '\033';
 
-			    box(266,16,176,4,2,1);
-			    if (button(58," SPACE ",48,176,20)) k = ' ';
-			    box(266,208,176,4,2,1);
+			    color_box(GRAY_BOX_C,16,176,4*8,2*8);
+			    if (button(BLUE_BOX_C," SPACE ",48,176,20)) k = ' ';
+			    color_box(GRAY_BOX_C,208,176,4*8,2*8);
 
 			    if (k == 0) k = toupper(read_kbd());
 			    if (k == ';') k = ':'; //nes specific
@@ -1047,15 +1136,15 @@ void ui_updatefunc(void) {
 			      box(6,64,64,16,8,1);
 			      spr(368,76,76,14,1);
 
-			      if (sprbutton(266,256,72,88,4,4,3,2)) {
+			      if (sprbutton(GRAY_BOX_C,256,72,88,4,4,3,2)) {
 				  sdl_ui_mode = UI_SAVEMENU;
 			      }
 
-			      if (sprbutton(266,259,112,88,4,4,3,2)) {
+			      if (sprbutton(GRAY_BOX_C,259,112,88,4,4,3,2)) {
 				  exit(0);
 			      }
 
-			      if (sprbutton(266,262,152,88,4,4,3,2)) {
+			      if (sprbutton(GRAY_BOX_C,262,152,88,4,4,3,2)) {
 				  sdl_ui_mode = UI_EDITOR;
 			      }
 
