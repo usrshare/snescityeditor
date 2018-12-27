@@ -334,6 +334,7 @@ uint32_t sdl_frame_cb(uint32_t interval, void* param) {
 		cticks = SDL_GetTicks();
 		ctx->updatefunc();
 		rerender = 1;
+		//fillrect(0xFF0000, (framecnt % 256), 0, 1, 16);
 		//printf("frame %u performed at %u\n", framecnt, cticks);
 		framecnt++;
 		frameticks = start_ticks + (framecnt * 1000 / 60); //figure out the next frame instead
