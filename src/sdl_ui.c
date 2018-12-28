@@ -333,6 +333,7 @@ uint32_t sdl_frame_cb(uint32_t interval, void* param) {
 
 		cticks = SDL_GetTicks();
 		ctx->updatefunc();
+		mousecoords.b_press = mousecoords.b_release = 0;
 		rerender = 1;
 		//fillrect(0xFF0000, (framecnt % 256), 0, 1, 16);
 		//printf("frame %u performed at %u\n", framecnt, cticks);

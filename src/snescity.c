@@ -74,6 +74,10 @@ char* city_lasterror = "no error.";
 
 int find_png_filename(const char* filename, char* o_f) {
 
+	//the function takes a full file path,
+	//and strips it down to the name (removing the extension and the directory),
+	//e.g. "/home/user/tokyo.png" -> "tokyo"
+	
 	const char* nstart = filename;
 
 	char* x = strrchr(filename,'/');
@@ -86,12 +90,17 @@ int find_png_filename(const char* filename, char* o_f) {
 	char* d = strrchr(filename,'.');
 
 	if (d) strl = (d-nstart);
-	strncpy(o_f,nstart,(strl < 8) ? strl : 8);
+	strncpy(o_f,nstart,(strl < CITYNAME_MAX) ? strl : CITYNAME_MAX);
 	return strl;
 }
 
 #ifdef NESMODE
+
 int city_convert_from_nes (const uint8_t* in, uint16_t* out) {
+
+	//this function reads an NES-style map and converts all the tiles
+	//from their NES values to their SNES values, which the rest of this
+	//program uses
 
 	size_t inpos = 0, outpos = 0;
 
@@ -107,15 +116,22 @@ int city_convert_from_nes (const uint8_t* in, uint16_t* out) {
 
 int city_convert_to_nes (const uint16_t* in, uint8_t* out) {
 
+	//this function reads an internal SNES-style map and converts all the tiles
+	//back into their NES values.
+	
 	if (!nes_savevalues_ready) {
+
+		//first, initialize the nes_savevalues array.
 
 		memset(nes_savevalues, 0, sizeof nes_savevalues);
 
-		nes_savevalues[0] = 0x90;
+		nes_savevalues[0] = 0x90; //0 (empty land) is to be turned into 0x90
 
 		for (int i=0; i < 256; i++) {
 			uint8_t l = nes_loadvalues[i];
 			if ((l) && (nes_savevalues[l] == 0)) nes_savevalues[l] = i; }
+		//find what indexes different nes_loadvalues are, and create a table that
+		//tries to do the opposite
 
 		nes_savevalues_ready = 1;
 	}
@@ -384,7 +400,7 @@ int loadsramcity (const char* sfname, uint16_t* citydata, int citynum, char* o_c
 	// read city
 	fseek(cityfile,cityoffset[citynum] + CITYNAMEOFFSET,SEEK_SET); // city name location
 
-	unsigned char cityname[CITYMAXLEN+1];
+	unsigned char cityname[CITYNAME_MAX+1];
 	uint8_t namelen = 0;
 	fread(&namelen,1,1,cityfile);
 #ifdef NESMODE
@@ -398,7 +414,7 @@ int loadsramcity (const char* sfname, uint16_t* citydata, int citynum, char* o_c
 	cityname[namelen] = 0;
 	printf("City name: %s\n",cityname);
 
-	if (o_cityname) strncpy(o_cityname, (char*) cityname, CITYMAXLEN+1);
+	if (o_cityname) strncpy(o_cityname, (char*) cityname, CITYNAME_MAX+1);
 
 	uint8_t sramfile[CITYMAPLEN];
 #ifdef NESMODE
@@ -441,7 +457,7 @@ int city2png (const char* sfname, const char* mfname, int citynum) {
 
 	fseek(cityfile,cityoffset[citynum] + 0x66,SEEK_SET); // city name location
 
-	unsigned char cityname[CITYMAXLEN];
+	unsigned char cityname[CITYNAME_MAX];
 	uint8_t namelen = 0;
 	fread(&namelen,1,1,cityfile);
 	fread(cityname,namelen,1,cityfile);
@@ -1022,7 +1038,7 @@ int describe_cities (const char* sfname, char* city1, char* city2) {
 
 			uint8_t namelen = citysram[cityoffset[ci] + CITYNAMEOFFSET];
 
-			char name[CITYMAXLEN];
+			char name[CITYNAME_MAX];
 
 			uint16_t year;
 
@@ -1200,8 +1216,8 @@ int write_new_city(const char* sfname, const uint16_t* citydata, const char* cit
 
 #endif
 
-	char convname[CITYMAXLEN];
-	size_t namelen = (strlen(cityname) < CITYMAXLEN) ? strlen(cityname) : CITYMAXLEN;
+	char convname[CITYNAME_MAX];
+	size_t namelen = (strlen(cityname) < CITYNAME_MAX) ? strlen(cityname) : CITYNAME_MAX;
 
 	for (int i=0; i < namelen; i++) {
 #ifdef NESMODE

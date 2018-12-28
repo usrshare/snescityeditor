@@ -13,8 +13,8 @@
 char city_fname[PATH_MAX], map_fname[PATH_MAX];
 
 char newfile[PATH_MAX];
-char cityname[CITYMAXLEN+1];
-char cityrename[CITYMAXLEN+1];
+char cityname[CITYNAME_MAX+1];
+char cityrename[CITYNAME_MAX+1];
 
 int citynum = 0;
 
@@ -1009,7 +1009,7 @@ void ui_updatefunc(void) {
 			    const char* citychars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ,.- ";
 #endif
 
-			    box(320,NAMEBOX_X,88,CITYMAXLEN + 2,2,1);
+			    box(320,NAMEBOX_X,88,CITYNAME_MAX + 2,2,1);
 
 			    s_addstr(cityrename,NAMEBOX_X + 8,88,0);
 			    if (framecnt & 16) spr(339, 8 + NAMEBOX_X + (8*strlen(cityrename)),96,1,1);
@@ -1041,7 +1041,7 @@ void ui_updatefunc(void) {
 			    if (button(BLUE_BOX_C,"I",152,128,2)) k = 'I';
 			    if (button(BLUE_BOX_C,"O",168,128,2)) k = 'O';
 			    if (button(BLUE_BOX_C,"P",184,128,2)) k = 'P';
-			    if (button(GRAY_BOX_C,"B.S",200,128,5)) k = '\b';
+			    if (sprbutton(GRAY_BOX_C,0x1DD,200,128,5,2,1,1)) k = '\b'; //backspace
 
 			    color_box(GRAY_BOX_C,16,144,4*8,2*8);
 			    if (button(BLUE_BOX_C,"A",48,144,2)) k = 'A';
@@ -1080,10 +1080,10 @@ void ui_updatefunc(void) {
 			    if (k == ';') k = ':'; //nes specific
 
 			    if ((k == '\b') && (strlen(cityrename) != 0)) cityrename[strlen(cityrename)-1] = 0;
-			    if ((k >= 32) && (strlen(cityrename) < CITYMAXLEN) && (strchr(citychars,k)) ) { cityrename[strlen(cityrename)+1] = 0; cityrename[strlen(cityrename)] = k; }
+			    if ((k >= 32) && (strlen(cityrename) < CITYNAME_MAX) && (strchr(citychars,k)) ) { cityrename[strlen(cityrename)+1] = 0; cityrename[strlen(cityrename)] = k; }
 			    if (k == 13) { open_kbd(0); city_modified = 1; strcpy(cityname,cityrename); sdl_ui_mode = UI_OPTIONS; }
 			    if (k == '\033') { open_kbd(0); sdl_ui_mode = UI_OPTIONS; }
-			    if (k == '\177') memset(cityrename,0,CITYMAXLEN+1);
+			    if (k == '\177') memset(cityrename,0,CITYNAME_MAX+1);
 
 			    break; }
 	case UI_SAVING: {

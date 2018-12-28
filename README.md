@@ -161,7 +161,8 @@ glitches when replacing a city map that already had buildings/citizens/etc.
 # Acknowledgments
 
 **NES**: Information on how the data in the SRAM file is located is, in part,
-based on [Cah4e3](http://cah4e3.shedevr.org.ru/)'s disassembly of the game.
+based on [Cah4e3](http://cah4e3.shedevr.org.ru/)'s 
+[disassembly of the game](https://github.com/g0me3/bfs_nes_sims).
 
 # Disclaimer
 
