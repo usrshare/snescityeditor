@@ -19,11 +19,11 @@ SDL_Surface* scs = 0; //screen surface (256x224)
 
 #ifdef PRESCALE
 SDL_Texture* pre_tex = 0;
-#define OUTPUTW 512
-#define OUTPUTH 448
+
+uint32_t output_w = 2 * SCREENW;
+uint32_t output_h = 2 * SCREENH;
+
 #else
-#define OUTPUTW 256
-#define OUTPUTH 224
 #endif
 
 SDL_Texture* tex = 0; //screen texture (OUTPUTWxOUTPUTH)
@@ -305,6 +305,21 @@ uint32_t sdl_frame_cb(uint32_t interval, void* param) {
 					if (lastevent.window.event != SDL_WINDOWEVENT_SIZE_CHANGED) break;
 
 					SDL_GetWindowSize(mainwin,&win_w,&win_h);
+
+#ifdef PRESCALE
+					uint32_t new_output_w = win_w - (win_w % SCREENW);
+					if (new_output_w == 0) new_output_w = SCREENW;
+					uint32_t new_output_h = win_h - (win_h % SCREENH);
+					if (new_output_h == 0) new_output_h = SCREENH;
+
+					if ((output_w != new_output_w) || (output_h != new_output_h)) {
+						SDL_DestroyTexture(tex);
+						tex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, new_output_w, new_output_h);
+						if (!tex) fprintf(stderr, SDL_GetError());
+						output_w = new_output_w; output_h = new_output_h;
+					}
+#endif
+
 					SDL_Rect newsize = boxify();
 					SDL_RenderSetViewport(ren, &newsize);
 					rerender = 1;
@@ -344,11 +359,11 @@ uint32_t sdl_frame_cb(uint32_t interval, void* param) {
 	if (rerender) {
 
 #ifdef PRESCALE
-		SDL_UpdateTexture(pre_tex, NULL, scs->pixels, scs->pitch);
+		int r = SDL_UpdateTexture(pre_tex, NULL, scs->pixels, scs->pitch);
 
-		SDL_SetRenderTarget(ren, tex);
-		SDL_RenderCopy(ren, pre_tex, NULL, NULL);
-		SDL_SetRenderTarget(ren, NULL);
+		r = SDL_SetRenderTarget(ren, tex);
+		r = SDL_RenderCopy(ren, pre_tex, NULL, NULL);
+		r = SDL_SetRenderTarget(ren, NULL);
 #else
 		SDL_UpdateTexture(tex, NULL, scs->pixels, scs->pitch);
 #endif
@@ -408,12 +423,12 @@ int sdl_ui_main(cb_noparam mainfunc, cb_noparam updatefunc) {
 
 	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY,"2");
 
-	tex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET,OUTPUTW,OUTPUTH);
+	tex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET,output_w,output_h);
 #else
 
 	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY,"2");
 
-	tex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,OUTPUTW,OUTPUTH);
+	tex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,SCREENW,SCREENH);
 
 #endif
 
