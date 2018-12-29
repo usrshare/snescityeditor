@@ -170,7 +170,7 @@ int s_addstr(const char* text, uint8_t x, uint8_t y, uint8_t font) {
 
 		if (*ct == '\n') {
 			cx = x;
-			cy += 16;
+			cy += font ? 8 : 16;
 		} else {
 
 			if (*ct != ' ') {

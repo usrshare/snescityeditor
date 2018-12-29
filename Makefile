@@ -14,7 +14,7 @@ else
 LDFLAGS = $(shell libpng-config --ldflags )
 endif
 
-_OBJS = snescity.o pngmap.o main.o
+_OBJS = sramcity.o cityedit.o pngmap.o main.o
 
 ifdef PROFILE
 CFLAGS += -pg

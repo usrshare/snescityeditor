@@ -6,7 +6,8 @@
 #include <stdbool.h>
 
 #include "defines.h"
-#include "snescity.h"
+#include "sramcity.h"
+#include "cityedit.h"
 #include "pngmap.h"
 #include "sdl_ui.h"
 
@@ -678,7 +679,11 @@ void ui_updatefunc(void) {
 
 				     int r = loadsramcity(city_fname,citytiles,citynum,cityname);
 				     if (r) {
-					 msgbox("Unable to load the city.",300);
+				
+					 char errormsg[128];
+					 strcpy(errormsg,"Unable to load the city.\n");
+					 strcat(errormsg,city_lasterror);
+					 msgbox(errormsg, 300);
 					 sdl_ui_mode = UI_MAINMENU;
 				     } else {
 					 msgbox("City loaded successfully.",300);
