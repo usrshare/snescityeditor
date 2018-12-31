@@ -6,6 +6,9 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <limits.h>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 // generic variables
 
@@ -242,13 +245,81 @@ struct sdl_frame_cb_ctx {
 	cb_noparam updatefunc;
 };
 	
-int rerender = 0;
+int sdl_ui_main(cb_noparam mainfunc, cb_noparam updatefunc) {
 
-uint32_t sdl_frame_cb(uint32_t interval, void* param) {
+	memset(keyboard_buffer,0,sizeof keyboard_buffer);
+	memset(keys_held,0,sizeof keys_held);
 
-	struct sdl_frame_cb_ctx* ctx = param;
+	int r = SDL_Init(SDL_INIT_VIDEO);
+	if (r != 0) {
+		fprintf(stderr,"Unable to start SDL video: %s\n",SDL_GetError()); exit(1); }
+
+	atexit(SDL_Quit);
+
+#ifdef NESMODE
+#define WINDOWTITLE "nescityeditor"
+#else
+#define WINDOWTITLE "snescityeditor"
+#endif
+
+	mainwin = SDL_CreateWindow(WINDOWTITLE,SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,win_w,win_h,SDL_WINDOW_RESIZABLE);
+
+	if (!mainwin) {
+		fprintf(stderr,"Unable to create window: %s\n",SDL_GetError()); exit(1); }
+
+	ren = SDL_CreateRenderer(mainwin,-1,SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+	//SDL_RenderSetLogicalSize(ren, 256, 224);
+	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+
+	if (!ren) {
+		fprintf(stderr,"Unable to create renderer: %s\n",SDL_GetError()); exit(1); }
 
 
+	scs = SDL_CreateRGBSurface(0,256,224,32,0x00FF0000,0x0000FF00,0x000000FF,0xFF000000);
+
+	if (!scs) {
+		fprintf(stderr,"Unable to create surface: %s\n",SDL_GetError()); exit(1); }
+
+#ifdef PRESCALE
+
+	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY,"0");
+
+	pre_tex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, SCREENW, SCREENH);
+
+	if (!pre_tex) {
+		fprintf(stderr,"Unable to create texture: %s\n",SDL_GetError()); exit(1); }
+
+	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY,"2");
+
+	tex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET,output_w,output_h);
+#else
+
+	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY,"2");
+
+	tex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,SCREENW,SCREENH);
+
+#endif
+
+
+	if (!tex) {
+		fprintf(stderr,"Unable to create texture: %s\n",SDL_GetError()); exit(1); }
+
+	tsurf = IMG_ReadXPMFromArray(textures_xpm);
+
+	mainfunc();
+
+	start_ticks = SDL_GetTicks();
+	framecnt = 0;
+
+	struct sdl_frame_cb_ctx ctx = {.updatefunc = updatefunc};
+
+	//----------------------------------------------------
+
+	int rerender = 0;
+	uint32_t oldticks = 0;
+	
+	while (1) {
+	
 	SDL_Event lastevent;
 
 	while (SDL_PollEvent(&lastevent) != 0) {
@@ -347,11 +418,12 @@ uint32_t sdl_frame_cb(uint32_t interval, void* param) {
 	while (frameticks <= cticks) { //it's about time
 
 		cticks = SDL_GetTicks();
-		ctx->updatefunc();
+		updatefunc();
 		mousecoords.b_press = mousecoords.b_release = 0;
 		rerender = 1;
 		//fillrect(0xFF0000, (framecnt % 256), 0, 1, 16);
-		//printf("frame %u performed at %u\n", framecnt, cticks);
+		//printf("frame %u performed at %u (%+d)\n", framecnt, cticks, cticks - oldticks);
+		oldticks = cticks;
 		framecnt++;
 		frameticks = start_ticks + (framecnt * 1000 / 60); //figure out the next frame instead
 	}
@@ -373,81 +445,12 @@ uint32_t sdl_frame_cb(uint32_t interval, void* param) {
 
 		rerender = 0;
 	}
+
+	//----------------------------------------------------
 	
-	return (frameticks - cticks);
-}
+	SDL_Delay (frameticks - cticks);
 
-int sdl_ui_main(cb_noparam mainfunc, cb_noparam updatefunc) {
-
-	memset(keyboard_buffer,0,sizeof keyboard_buffer);
-	memset(keys_held,0,sizeof keys_held);
-
-	int r = SDL_Init(SDL_INIT_VIDEO);
-	if (r != 0) {
-		fprintf(stderr,"Unable to start SDL video: %s\n",SDL_GetError()); exit(1); }
-
-	atexit(SDL_Quit);
-
-#ifdef NESMODE
-#define WINDOWTITLE "nescityeditor"
-#else
-#define WINDOWTITLE "snescityeditor"
-#endif
-
-	mainwin = SDL_CreateWindow(WINDOWTITLE,SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,win_w,win_h,SDL_WINDOW_RESIZABLE);
-
-	if (!mainwin) {
-		fprintf(stderr,"Unable to create window: %s\n",SDL_GetError()); exit(1); }
-
-	ren = SDL_CreateRenderer(mainwin,-1,SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-	//SDL_RenderSetLogicalSize(ren, 256, 224);
-	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
-
-	if (!ren) {
-		fprintf(stderr,"Unable to create renderer: %s\n",SDL_GetError()); exit(1); }
-
-
-	scs = SDL_CreateRGBSurface(0,256,224,32,0x00FF0000,0x0000FF00,0x000000FF,0xFF000000);
-
-	if (!scs) {
-		fprintf(stderr,"Unable to create surface: %s\n",SDL_GetError()); exit(1); }
-
-#ifdef PRESCALE
-
-	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY,"0");
-
-	pre_tex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, SCREENW, SCREENH);
-
-	if (!pre_tex) {
-		fprintf(stderr,"Unable to create texture: %s\n",SDL_GetError()); exit(1); }
-
-	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY,"2");
-
-	tex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET,output_w,output_h);
-#else
-
-	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY,"2");
-
-	tex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,SCREENW,SCREENH);
-
-#endif
-
-
-	if (!tex) {
-		fprintf(stderr,"Unable to create texture: %s\n",SDL_GetError()); exit(1); }
-
-	tsurf = IMG_ReadXPMFromArray(textures_xpm);
-
-	mainfunc();
-
-	start_ticks = SDL_GetTicks();
-	framecnt = 0;
-
-	struct sdl_frame_cb_ctx ctx = {.updatefunc = updatefunc};
-
-	SDL_AddTimer( 1000 / 60, sdl_frame_cb, &ctx); 
-
-	pause();
+	}
 
 	SDL_DestroyRenderer(ren);
 	SDL_DestroyWindow(mainwin);

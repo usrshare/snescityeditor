@@ -16,6 +16,10 @@
 #include "ui_menu.h"
 #endif
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #ifndef __CYGWIN__
 // fixing a cygwin error
 extern char *optarg;
@@ -43,6 +47,11 @@ void exit_usage_error(char** argv) {
 	    "\n",argv[0]); exit(1);}
 
     int main (int argc, char** argv) {
+
+#ifdef _WIN32
+	setvbuf(stdout,NULL,_IONBF,0); //disable buffering for windows
+	//timeBeginPeriod(5); //set timer frequency to slightly higher for smoother framerates
+#endif
 
 #ifdef USE_SDL_UI
 	if (argc == 1) return sdl_ui_main(ui_initfunc, ui_updatefunc);
